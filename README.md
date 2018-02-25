@@ -15,17 +15,18 @@
  - 实时抓取新闻数据，判断与该新闻相关的股票有哪些，利用上一步的结果，对与某支股票相关的所有历史新闻文本（已贴标签）进行文本分析（构建新的特征集），然后利用SVM（或随机森林）分类器对文本分析结果进行训练（如果已保存训练模型，可选择重新训练或直接加载模型），最后利用训练模型对实时抓取的新闻数据进行分类预测
 
 开发环境`Python-v3(3.6)`：
-gensim==3.2.0
-jieba==0.39
-scikit-learn==0.19.1
-pandas==0.20.0
-numpy==1.13.3+mkl
-scipy==0.19.0
-pymongo==3.6.0
-beautifulsoup4==4.6.0
-tushare==1.1.1
-requests==2.18.4
-gevent==1.2.1
+
+ - gensim==3.2.0
+ - jieba==0.39
+ - scikit-learn==0.19.1
+ - pandas==0.20.0
+ - numpy==1.13.3+mkl
+ - scipy==0.19.0
+ - pymongo==3.6.0
+ - beautifulsoup4==4.6.0
+ - tushare==1.1.1
+ - requests==2.18.4
+ - gevent==1.2.1
 
 ## * 文本处理(`text_processing.py`)
 
