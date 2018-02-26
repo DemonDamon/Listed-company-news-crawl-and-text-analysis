@@ -54,5 +54,5 @@
  - 配好运行环境以及安装MongoDB，最好再安装一个MongoDB的可视化管理工具Studio 3T
  - 先运行`run_crawler_cnstock.py`，`run_crawler_jrj.py`，`run_crawler_nbd.py`，`run_crawler_sina.py`，`run_crawler_stcn.py`这5个py文件，而且可能因为对方服务器没有响应而重复多次运行这几个文件才能抓取大量的历史数据
  - 接着运行`run_crawler_tushare.py`从Tushare获取基本信息和股票价格
- - 最后运行`run.py`文件，其中有4个步骤，除了第1步初始化外，其他几步最好单独运行
+ - 最后运行`run_main.py`文件，其中有4个步骤，除了第1步初始化外，其他几步最好单独运行
  - 注意：所有程序都必须在文件所在目录下运行
