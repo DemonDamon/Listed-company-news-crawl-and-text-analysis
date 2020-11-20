@@ -1,6 +1,5 @@
 # 上市公司新闻文本分析与分类预测
-
-<img src="./docs/images/FINNEWS%HUNTER.jpg" alt="logo" style="width: 200px;"/>
+ ![image](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/docs/images/FINNEWS%20HUNTER.jpg)
 
 -------------------------------
 
