@@ -125,7 +125,7 @@ class WebCrawlFromcnstock(object):
                     and a.parent.find('span'):
                         date, article = self.getUrlInfo(a['href'])
                         while article == '' and self.Prob >= .1:
-                            self.Prob -= .1
+                            self.Prob -= .193
                             date, article = self.getUrlInfo(a['href'])
                         self.Prob =.5
                         if article != '':

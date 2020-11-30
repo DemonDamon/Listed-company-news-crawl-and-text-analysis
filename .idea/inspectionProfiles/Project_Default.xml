@@ -5,6 +5,7 @@
       <option name="ignoredErrors">
         <list>
           <option value="W391" />
+          <option value="E265" />
         </list>
       </option>
     </inspection_tool>
