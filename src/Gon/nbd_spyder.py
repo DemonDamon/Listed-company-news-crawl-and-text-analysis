@@ -61,8 +61,9 @@ class NbdSpyder(Spyder):
         return [date, article]
 
     def get_historical_news(self, start_page):
-        if len(self.extract_data(["PageId"])[0]) != 0:
-            latest_page_id = min(self.extract_data(["PageId"])[0])
+        extracted_data_list = self.extract_data(["PageId"])[0]
+        if len(extracted_data_list) != 0:
+            latest_page_id = min(extracted_data_list)
         else:
             latest_page_id = start_page
         crawled_urls_list = list()
@@ -71,7 +72,9 @@ class NbdSpyder(Spyder):
             for qr in query_results:
                 crawled_urls_list.append(qr["Url"])
         # crawled_urls_list = self.extract_data(["Url"])[0]  # abandoned
-        logging.info("[INFO] the length of crawled data in {} is {} ... ".format(start_page, len(crawled_urls_list)))
+        logging.info("[INFO] the length of crawled data from page {} to page {} is {} ... ".format(start_page,
+                                                                                                   latest_page_id,
+                                                                                                   len(crawled_urls_list)))
 
         page_urls = ["{}/{}".format(config.WEBSITES_LIST_TO_BE_CRAWLED_NBD, page_id) for page_id in range(start_page, 0, -1)]
         for page_url in page_urls:

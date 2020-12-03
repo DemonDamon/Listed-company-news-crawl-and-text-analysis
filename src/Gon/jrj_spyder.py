@@ -53,13 +53,22 @@ class JrjSpyder(Spyder):
         return [date, article]
 
     def get_historical_news(self, url, start_date, end_date):
-        # 抽取数据库中已爬取的start_date当天所有新闻，避免重复爬取
-        query_results = self.query_news("Date", start_date)
+        # 抽取数据库中已爬取的从start_date到latest_date_str所有新闻，避免重复爬取
+        extracted_data_list = self.extract_data(["Date"])[0]
+        if len(extracted_data_list) != 0:
+            latest_date_str = max(extracted_data_list).split(" ")[0]
+        else:
+            latest_date_str = start_date
+        logging.info("[INFO] latest time in database is {} ... ".format(latest_date_str))
         crawled_urls_list = list()
-        for qr in query_results:
-            crawled_urls_list.append(qr["Url"])
+        for _date in utils.get_date_list_from_range(start_date, latest_date_str):
+            query_results = self.query_news("Date", _date)
+            for qr in query_results:
+                crawled_urls_list.append(qr["Url"])
         # crawled_urls_list = self.extract_data(["Url"])[0]  # abandoned
-        logging.info("[INFO] the length of crawled data in {} is {} ... ".format(start_date, len(crawled_urls_list)))
+        logging.info("[INFO] the length of crawled data from {} to {} is {} ... ".format(start_date,
+                                                                                         latest_date_str,
+                                                                                         len(crawled_urls_list)))
 
         dates_list = utils.get_date_list_from_range(start_date, end_date)
         dates_separated_into_ranges_list = utils.gen_dates_list(dates_list, config.JRJ_DATE_RANGE)
@@ -120,7 +129,6 @@ class JrjSpyder(Spyder):
                                 else:
                                     logging.info("[INFO] 放弃爬取 {}".format(a.string))
 
-
     def get_realtime_news(self, url):
         pass
 
@@ -128,8 +136,8 @@ class JrjSpyder(Spyder):
 if __name__ == "__main__":
     jrj_spyder = JrjSpyder()
     if not os.path.exists(config.RECORD_JRJ_START_DATE_TXT_FILE_PATH):
-        jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2015-12-22", "2020-12-01")
+        jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2016-02-01", "2020-12-03")
     else:
         with open(config.RECORD_JRJ_START_DATE_TXT_FILE_PATH, "r") as f:
             start_date = f.read()
-        jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, start_date, "2020-12-01")
+        jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, start_date, "2020-12-03")
