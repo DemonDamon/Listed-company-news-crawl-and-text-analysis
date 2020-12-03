@@ -31,11 +31,14 @@ class CnStockSpyder(Spyder):
         super(CnStockSpyder, self).__init__()
         self.col = self.db_obj.create_col(self.db, config.COLLECTION_NAME_CNSTOCK)
         self.driver = webdriver.Chrome(executable_path=config.CHROME_DRIVER)
+        self.btn_more_text = ""
+        self.terminated_amount = 0
 
     def get_url_info(self, url):
-        respond = requests.get(url)
-        respond.encoding = BeautifulSoup(respond.content, "lxml").original_encoding
-        bs = BeautifulSoup(respond.text, "lxml")
+        try:
+            bs = utils.html_parser(url)
+        except Exception:
+            return False
         span_list = bs.find_all("span")
         part = bs.find_all("p")
         article = ""
@@ -56,26 +59,26 @@ class CnStockSpyder(Spyder):
             article = article.replace("\u3000", "")
         article = " ".join(re.split(" +|\n+", article)).strip()
 
-        return date, article
+        return [date, article]
 
     def get_historical_news(self, url):
         crawled_urls_list = self.extract_data(["Url"])[0]
-        logging.info("[INFO] history data length is {} ... ".format(len(crawled_urls_list)))
+        logging.info("historical data length -> {} ... ".format(len(crawled_urls_list)))
         self.driver.get(url)
-        while True:
+        while self.btn_more_text != "没有更多":
             more_btn = self.driver.find_element_by_id('j_more_btn')
+            self.btn_more_text = more_btn.text
             logging.info("1-{}".format(more_btn.text))
-            if more_btn.text == "加载更多":
+            if self.btn_more_text == "加载更多":
                 more_btn.click()
                 time.sleep(random.random())  # sleep random time less 1s
-            elif more_btn.text == "加载中...":
+            elif self.btn_more_text == "加载中...":
                 time.sleep(random.random()+2)
                 more_btn = self.driver.find_element_by_id('j_more_btn')
+                self.btn_more_text = more_btn.text
                 logging.info("2-{}".format(more_btn.text))
-                if more_btn.text == "加载更多":
+                if self.btn_more_text == "加载更多":
                     more_btn.click()
-                else:
-                    break
             else:
                 more_btn.click()
                 break
@@ -83,11 +86,40 @@ class CnStockSpyder(Spyder):
         for li in bs.find_all("li", attrs={"class": ["newslist"]}):
             a = li.find_all("h2")[0].find("a")
             if a["href"] not in crawled_urls_list:
-                logging.info("[INFO] href not in history {}".format(a["href"]))
-                date, article = self.get_url_info(a["href"])
+                result = self.get_url_info(a["href"])
+                while not result:
+                    self.terminated_amount += 1
+                    if self.terminated_amount > config.CNSTOCK_MAX_REJECTED_AMOUNTS:
+                        with open(config.RECORD_CNSTOCK_FAILED_URL_TXT_FILE_PATH, "a+") as file:
+                            file.write("{}\n".format(a["href"]))
+                        logging.info("rejected by remote server longer than {} minutes, "
+                                     "and the failed url has been written in path {}"
+                                     .format(config.CNSTOCK_MAX_REJECTED_AMOUNTS,
+                                             config.RECORD_CNSTOCK_FAILED_URL_TXT_FILE_PATH))
+                        break
+                    logging.info("rejected by remote server, request {} again after "
+                                 "{} seconds...".format(a["href"], 60 * self.terminated_amount))
+                    time.sleep(60 * self.terminated_amount)
+                    result = self.get_url_info(a["href"], date)
+                date, article = result
                 while article == "" and self.is_article_prob >= .1:
                     self.is_article_prob -= .1
-                    date, article = self.get_url_info(a["href"])
+                    result = self.get_url_info(a["href"])
+                    while not result:
+                        self.terminated_amount += 1
+                        if self.terminated_amount > config.CNSTOCK_MAX_REJECTED_AMOUNTS:
+                            with open(config.RECORD_CNSTOCK_FAILED_URL_TXT_FILE_PATH, "a+") as file:
+                                file.write("{}\n".format(a["href"]))
+                            logging.info("rejected by remote server longer than {} minutes, "
+                                         "and the failed url has been written in path {}"
+                                         .format(config.CNSTOCK_MAX_REJECTED_AMOUNTS,
+                                                 config.RECORD_CNSTOCK_FAILED_URL_TXT_FILE_PATH))
+                            break
+                        logging.info("rejected by remote server, request {} again after "
+                                     "{} seconds...".format(a["href"], 60 * self.terminated_amount))
+                        time.sleep(60 * self.terminated_amount)
+                        result = self.get_url_info(a["href"], date)
+                    date, article = result
                 self.is_article_prob = .5
                 if article != "":
                     data = {"Date": date,
@@ -95,14 +127,15 @@ class CnStockSpyder(Spyder):
                             "Title": a["title"],
                             "Article": article}
                     self.col.insert_one(data)
+                    logging.info("[SUCCESS] {} {} {}".format(date, a["title"], a["href"]))
 
 
 if __name__ == '__main__':
     cnstock_spyder = CnStockSpyder()
     for url_to_be_crawled in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK:
-        logging.info("[INFO] start crawling {} ...".format(url_to_be_crawled))
+        logging.info("start crawling {} ...".format(url_to_be_crawled))
         cnstock_spyder.get_historical_news(url_to_be_crawled)
-        logging.info("[INFO] finished ...")
+        logging.info("finished ...")
         time.sleep(30)
     cnstock_spyder.driver.quit()
 

@@ -59,14 +59,14 @@ class JrjSpyder(Spyder):
             latest_date_str = max(extracted_data_list).split(" ")[0]
         else:
             latest_date_str = start_date
-        logging.info("[INFO] latest time in database is {} ... ".format(latest_date_str))
+        logging.info("latest time in database is {} ... ".format(latest_date_str))
         crawled_urls_list = list()
         for _date in utils.get_date_list_from_range(start_date, latest_date_str):
             query_results = self.query_news("Date", _date)
             for qr in query_results:
                 crawled_urls_list.append(qr["Url"])
         # crawled_urls_list = self.extract_data(["Url"])[0]  # abandoned
-        logging.info("[INFO] the length of crawled data from {} to {} is {} ... ".format(start_date,
+        logging.info("the length of crawled data from {} to {} is {} ... ".format(start_date,
                                                                                          latest_date_str,
                                                                                          len(crawled_urls_list)))
 
@@ -76,7 +76,6 @@ class JrjSpyder(Spyder):
         for dates_range in dates_separated_into_ranges_list:
             for date in dates_range:
                 first_url = "{}/{}/{}_1.shtml".format(url, date.replace("-", "")[0:6], date.replace("-", ""))
-                logging.info(first_url)
                 max_pages_num = utils.search_max_pages_num(first_url, date)
                 for num in range(1, max_pages_num + 1):
                     _url = "{}/{}/{}_{}.shtml".format(url, date.replace("-", "")[0:6], date.replace("-", ""), str(num))
@@ -87,7 +86,7 @@ class JrjSpyder(Spyder):
                                 a["href"].find("/{}/{}/".format(date.replace("-", "")[:4],
                                                                 date.replace("-", "")[4:6])) != -1:
                             if a["href"] not in crawled_urls_list:
-                                # 如果标题不包含"快讯","收盘","报于"等字样，即保存
+                                # 如果标题不包含"快讯","收盘","报于"等字样，即保存，因为包含这些字样标题的新闻多为机器自动生成
                                 if a.string.find("快讯") == -1 and \
                                         a.string.find("收盘") == -1 and a.string.find("报于") == -1:
                                     result = self.get_url_info(a["href"], date)
@@ -98,7 +97,7 @@ class JrjSpyder(Spyder):
                                                 file.write(date)
                                             raise Exception("rejected by remote server longer than {} minutes ... "
                                                             .format(config.JRJ_MAX_REJECTED_AMOUNTS))
-                                        logging.info("[INFO] rejected by remote server, request {} again after "
+                                        logging.info("rejected by remote server, request {} again after "
                                                      "{} seconds...".format(a["href"], 60 * self.terminated_amount))
                                         time.sleep(60 * self.terminated_amount)
                                         result = self.get_url_info(a["href"], date)
@@ -113,7 +112,7 @@ class JrjSpyder(Spyder):
                                                     file.write(date)
                                                 raise Exception("rejected by remote server longer than {} minutes ... "
                                                                 .format(config.JRJ_MAX_REJECTED_AMOUNTS))
-                                            logging.info("[INFO] rejected by remote server, request {} again after "
+                                            logging.info("rejected by remote server, request {} again after "
                                                          "{} seconds...".format(a["href"], 60 * self.terminated_amount))
                                             time.sleep(60 * self.terminated_amount)
                                             result = self.get_url_info(a["href"], date)
@@ -125,9 +124,9 @@ class JrjSpyder(Spyder):
                                                     "Title": a.string,
                                                     "Article": article}
                                             self.col.insert_one(data)
-                                            logging.info("{} {} \n{}".format(article_specific_date, a.string, a["href"]))
+                                            logging.info("[SUCCESS] {} {} {}".format(article_specific_date, a.string, a["href"]))
                                 else:
-                                    logging.info("[INFO] 放弃爬取 {}".format(a.string))
+                                    logging.info("[QUIT] {}".format(a.string))
 
     def get_realtime_news(self, url):
         pass

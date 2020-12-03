@@ -72,7 +72,7 @@ class NbdSpyder(Spyder):
             for qr in query_results:
                 crawled_urls_list.append(qr["Url"])
         # crawled_urls_list = self.extract_data(["Url"])[0]  # abandoned
-        logging.info("[INFO] the length of crawled data from page {} to page {} is {} ... ".format(start_page,
+        logging.info("the length of crawled data from page {} to page {} is {} ... ".format(start_page,
                                                                                                    latest_page_id,
                                                                                                    len(crawled_urls_list)))
 
@@ -93,7 +93,7 @@ class NbdSpyder(Spyder):
                                     file.write(page_url.split("/")[-1])
                                 raise Exception("rejected by remote server longer than {} minutes ... "
                                                 .format(config.NBD_MAX_REJECTED_AMOUNTS))
-                            logging.info("[INFO] rejected by remote server, request {} again after "
+                            logging.info("rejected by remote server, request {} again after "
                                          "{} seconds...".format(a["href"], 60 * self.terminated_amount))
                             time.sleep(60 * self.terminated_amount)
                             result = self.get_url_info(a["href"])
@@ -108,7 +108,7 @@ class NbdSpyder(Spyder):
                                         file.write(page_url.split("/")[-1])
                                     raise Exception("rejected by remote server longer than {} minutes ... "
                                                     .format(config.NBD_MAX_REJECTED_AMOUNTS))
-                                logging.info("[INFO] rejected by remote server, request {} again after "
+                                logging.info("rejected by remote server, request {} again after "
                                              "{} seconds...".format(a["href"], 60 * self.terminated_amount))
                                 time.sleep(60 * self.terminated_amount)
                                 result = self.get_url_info(a["href"])
@@ -121,7 +121,7 @@ class NbdSpyder(Spyder):
                                     "Title": a.string,
                                     "Article": article}
                             self.col.insert_one(data)
-                            logging.info("{} {} \n{}".format(date, a.string, a["href"]))
+                            logging.info("[SUCCESS] {} {} {}".format(date, a.string, a["href"]))
 
     def get_realtime_news(self, url):
         pass
