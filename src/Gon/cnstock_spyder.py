@@ -15,9 +15,14 @@ from Kite import utils
 import re
 import time
 import random
+import logging
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                    datefmt='%a, %d %b %Y %H:%M:%S')
 
 
 class CnStockSpyder(Spyder):
@@ -55,18 +60,18 @@ class CnStockSpyder(Spyder):
 
     def get_historical_news(self, url):
         crawled_urls_list = self.extract_data(["Url"])[0]
-        print("[INFO] history data length is {} ... ".format(len(crawled_urls_list)))
+        logging.info("[INFO] history data length is {} ... ".format(len(crawled_urls_list)))
         self.driver.get(url)
         while True:
             more_btn = self.driver.find_element_by_id('j_more_btn')
-            print("1-{}".format(more_btn.text))
+            logging.info("1-{}".format(more_btn.text))
             if more_btn.text == "加载更多":
                 more_btn.click()
                 time.sleep(random.random())  # sleep random time less 1s
             elif more_btn.text == "加载中...":
                 time.sleep(random.random()+2)
                 more_btn = self.driver.find_element_by_id('j_more_btn')
-                print("2-{}".format(more_btn.text))
+                logging.info("2-{}".format(more_btn.text))
                 if more_btn.text == "加载更多":
                     more_btn.click()
                 else:
@@ -78,7 +83,7 @@ class CnStockSpyder(Spyder):
         for li in bs.find_all("li", attrs={"class": ["newslist"]}):
             a = li.find_all("h2")[0].find("a")
             if a["href"] not in crawled_urls_list:
-                print("[INFO] href not in history {}".format(a["href"]))
+                logging.info("[INFO] href not in history {}".format(a["href"]))
                 date, article = self.get_url_info(a["href"])
                 while article == "" and self.is_article_prob >= .1:
                     self.is_article_prob -= .1
@@ -95,9 +100,9 @@ class CnStockSpyder(Spyder):
 if __name__ == '__main__':
     cnstock_spyder = CnStockSpyder()
     for url_to_be_crawled in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK:
-        print("[INFO] start crawling {} ...".format(url_to_be_crawled))
+        logging.info("[INFO] start crawling {} ...".format(url_to_be_crawled))
         cnstock_spyder.get_historical_news(url_to_be_crawled)
-        print("[INFO] finished ...")
+        logging.info("[INFO] finished ...")
         time.sleep(30)
     cnstock_spyder.driver.quit()
 
