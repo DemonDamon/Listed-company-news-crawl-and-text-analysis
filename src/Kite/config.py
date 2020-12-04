@@ -24,3 +24,7 @@ WEBSITES_LIST_TO_BE_CRAWLED_NBD = 'http://stocks.nbd.com.cn/columns/275/page'
 RECORD_NBD_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\nbd_failed_urls.txt"
 NBD_TOTAL_PAGES_NUM = 684
 NBD_MAX_REJECTED_AMOUNTS = 10
+
+TUSHARE_TOKEN = "97fbc4c73727b5d171ca6670cbc4af8b0a3de5fbab74b52f30b598cc"
+TUSHARE_DATABASE_NAME = 'tushare'
+COLLECTION_NAME_STOCK_BASIC_INFO = "stock_basic_info"

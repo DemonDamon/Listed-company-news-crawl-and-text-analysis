@@ -74,5 +74,9 @@
  
  ## 更新日志
  
- - 更新数据爬虫代码，直接运行`cnstock_spyder.py`等爬虫代码即可
+ - 更新`crawler_cnstock.py`代码为`cnstock_spyder.py`，直接运行即可获取历史数据
+ - 更新`crawler_jrj.py`代码为`jrj_spyder.py`，直接运行即可获取历史数据
+ - 更新`crawler_nbd.py`代码为`nbd_spyder.py`，直接运行即可获取历史数据
+ - 更新`crawler_sina.py`代码为`sina_spyder.py`，直接运行即可获取历史数据
+ - 停止`证券时报网`爬虫代码的更新(旧代码已不可用)，新增`网易财经`和`凤凰财经`的爬虫代码
 
