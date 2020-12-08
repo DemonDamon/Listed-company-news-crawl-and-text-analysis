@@ -1,5 +1,26 @@
 # 1. 爬取历史数据
+import time
+import logging
+from Kite import config
 from Gon.jrj_spyder import JrjSpyder
+from Gon.cnstock_spyder import CnStockSpyder
+from Gon.nbd_spyder import NbdSpyder
+
+# cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+# for url_to_be_crawled in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK:
+#     logging.info("start crawling {} ...".format(url_to_be_crawled))
+#     cnstock_spyder.get_historical_news(url_to_be_crawled)
+#     logging.info("finished ...")
+#     time.sleep(30)
+# cnstock_spyder.driver.quit()
+#
+# jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+# jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2020-12-04", "2020-12-08")
+#
+# nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+# nbd_spyder.get_historical_news(684)
+
+
 # 1.1 针对历史数据进行去重清洗
 
 
@@ -7,5 +28,6 @@ from Gon.jrj_spyder import JrjSpyder
 from Leorio.tokenization import Tokenization
 # tokenization = Tokenization(import_module="jieba", user_dict="finance_dict.txt")
 # tokenization.update_news_database_rows(config.DATABASE_NAME, "nbd_test")
+
 
 # 3. 创建新的数据库，针对每一个股票，将所有涉及该股票的新闻都保存在新的数据库

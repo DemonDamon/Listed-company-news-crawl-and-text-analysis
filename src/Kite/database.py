@@ -28,6 +28,9 @@ class Database(object):
 		collection.update_one(query, {"$set": new_values})
 
 	def get_data(self, database_name, collection_name, max_data_request=None, query=None, keys=None):
+		# e.g.:
+		# ExampleObj = Database()
+		# name_code_df = ExampleObj.get_data("finnewshunter", "nbd", query={"Date":{"$regex":"2014"}}, keys=["Url", "Title"])
 		database = self.conn[database_name]
 		collection = database.get_collection(collection_name)
 		if query:
@@ -52,11 +55,12 @@ class Database(object):
 				else:
 					break
 		else:
-			data = collection.find()
+			# data = collection.find()
+			data = collection.find(query) if len(query) != 0 else collection.find()
 			data_keys = list(
 				next(data).keys())  # ['_id', 'Date', 'PageId', 'Url', 'Title', 'Article', 'RelevantStockCodes']
 			_dict = {_key: [] for _key in data_keys}
-			for _id, row in enumerate(collection.find()):
+			for _id, row in enumerate(collection.find(query) if len(query) != 0 else collection.find()):
 				if _id + 1 <= max_data_request:
 					for _key in data_keys:
 						_dict[_key].append(row[_key])
