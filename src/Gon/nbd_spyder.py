@@ -145,7 +145,7 @@ class NbdSpyder(Spyder):
 
 if __name__ == "__main__":
     nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
-    nbd_spyder.get_historical_news(1)
+    nbd_spyder.get_historical_news(684)
     # nbd_spyder.get_historical_news(684)
 
     # TODO：继续爬取RECORD_NBD_FAILED_URL_TXT_FILE_PATH文件中失败的URL

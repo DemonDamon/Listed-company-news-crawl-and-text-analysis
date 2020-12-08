@@ -30,7 +30,7 @@ class Database(object):
 	def get_data(self, database_name, collection_name, max_data_request=None, query=None, keys=None):
 		# e.g.:
 		# ExampleObj = Database()
-		# name_code_df = ExampleObj.get_data("finnewshunter", "nbd", query={"Date":{"$regex":"2014"}}, keys=["Url", "Title"])
+		# name_code_df = ExampleObj.get_data("finnewshunter", "nbd", query={"Date": {"$regex": "2014"}}, keys=["Url", "Title"])
 		database = self.conn[database_name]
 		collection = database.get_collection(collection_name)
 		if query:
