@@ -90,3 +90,12 @@ def html_parser(url):
     bs = BeautifulSoup(resp.text, "lxml")
 
     return bs
+
+
+def get_chn_stop_words(path):
+    '''Load the stop words txt file.
+    '''
+    stopwords = [line.strip() for line in open(path, 'r').readlines()]
+
+    return stopwords
+

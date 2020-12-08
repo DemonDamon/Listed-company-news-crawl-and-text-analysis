@@ -6,6 +6,7 @@ A股动态：http://stocks.nbd.com.cn/columns/275/page/1
 import __init__
 from spyder import Spyder
 
+from Kite.database import Database
 from Kite import config
 from Kite import utils
 
@@ -20,10 +21,13 @@ logging.basicConfig(level=logging.INFO,
 
 class NbdSpyder(Spyder):
 
-    def __init__(self):
+    def __init__(self, database_name, collection_name):
         super(NbdSpyder, self).__init__()
-        self.col = self.db_obj.create_col(self.db, config.COLLECTION_NAME_NBD)
+        self.db_obj = Database()
+        self.col = self.db_obj.conn[database_name].get_collection(collection_name)
         self.terminated_amount = 0
+        self.db_name = database_name
+        self.col_name = collection_name
 
     def get_url_info(self, url):
         try:
@@ -131,7 +135,8 @@ class NbdSpyder(Spyder):
                                         "Url": a["href"],
                                         "Title": a.string,
                                         "Article": article}
-                                self.col.insert_one(data)
+                                # self.col.insert_one(data)
+                                self.db_obj.insert_data(self.db_name, self.col_name, data)
                                 logging.info("[SUCCESS] {} {} {}".format(date, a.string, a["href"]))
 
     def get_realtime_news(self, url):
@@ -139,8 +144,9 @@ class NbdSpyder(Spyder):
 
 
 if __name__ == "__main__":
-    nbd_spyder = NbdSpyder()
-    nbd_spyder.get_historical_news(684)
+    nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    nbd_spyder.get_historical_news(1)
+    # nbd_spyder.get_historical_news(684)
 
     # TODO：继续爬取RECORD_NBD_FAILED_URL_TXT_FILE_PATH文件中失败的URL
     pass

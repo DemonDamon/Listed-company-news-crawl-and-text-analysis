@@ -1,24 +1,68 @@
 from pymongo import MongoClient
+import pandas as pd
 
 
 class Database(object):
 
-	def __init__(self, ip='localhost', port=27017):
+	def __init__(self, ip="localhost", port=27017):
 		self.ip = ip
 		self.port = port
 		self.conn = MongoClient(self.ip, self.port)
 
-	def create_db(self, database_str):
-		return self.conn[database_str]
+	def _connect_database(self, database_name):
+		return self.conn[database_name]
 
-	@staticmethod
-	def create_col(database, collection_str):
-		return database.get_collection(collection_str)
+	def get_collection(self, database_name, collection_name):
+		return self._connect_database(database_name).get_collection(collection_name)
 
-	@staticmethod
-	def insert_data(collection, data_dict):
-		# dic = {'name': 'serena', "id": 1532}
+	def insert_data(self, database_name, collection_name, data_dict):
+		database = self.conn[database_name]
+		collection = database.get_collection(collection_name)
 		collection.insert_one(data_dict)
+
+	def update_row(self, database_name, collection_name, query, new_values):
+		assert isinstance(query, dict)
+		assert isinstance(new_values, dict)
+		database = self.conn[database_name]
+		collection = database.get_collection(collection_name)
+		collection.update_one(query, {"$set": new_values})
+
+	def get_data(self, database_name, collection_name, max_data_request=None, query=None, keys=None):
+		database = self.conn[database_name]
+		collection = database.get_collection(collection_name)
+		if query:
+			assert isinstance(query, dict)
+		else:
+			query = {}
+		if keys:
+			assert isinstance(keys, list)
+		else:
+			keys = []
+		if max_data_request:
+			assert isinstance(max_data_request, int)
+		else:
+			max_data_request = float("inf")
+		if len(keys) != 0:
+			_dict = {_key: [] for _key in keys}
+			data = collection.find(query) if len(query) != 0 else collection.find()
+			for _id, row in enumerate(data):
+				if _id + 1 <= max_data_request:
+					for _key in keys:
+						_dict[_key].append(row[_key])
+				else:
+					break
+		else:
+			data = collection.find()
+			data_keys = list(
+				next(data).keys())  # ['_id', 'Date', 'PageId', 'Url', 'Title', 'Article', 'RelevantStockCodes']
+			_dict = {_key: [] for _key in data_keys}
+			for _id, row in enumerate(collection.find()):
+				if _id + 1 <= max_data_request:
+					for _key in data_keys:
+						_dict[_key].append(row[_key])
+				else:
+					break
+		return pd.DataFrame(_dict)
 
 	def drop_db(self, database):
 		self.conn.drop_database(database)
@@ -28,7 +72,7 @@ class Database(object):
 from database import Database
 
 ExampleObj = Database()
-db = ExampleObj.create_db("cnstock")
+db = ExampleObj.connect_database("cnstock")
 col = ExampleObj.create_col(db, "cnstock_col")
 ExampleObj.insert_data(col, {'name': 'sena', "id": 136})
 ExampleObj.drop_db(db)

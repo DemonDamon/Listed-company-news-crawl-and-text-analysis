@@ -1,12 +1,6 @@
-from Kite.database import Database
-from Kite import config
-
-
 class Spyder(object):
 
     def __init__(self):
-        self.db_obj = Database()
-        self.db = self.db_obj.create_db(config.DATABASE_NAME)
         self.is_article_prob = .5
 
     def extract_data(self, tag_list):

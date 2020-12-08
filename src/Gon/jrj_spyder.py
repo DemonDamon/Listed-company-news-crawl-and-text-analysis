@@ -6,6 +6,7 @@
 import __init__
 from spyder import Spyder
 
+from Kite.database import Database
 from Kite import config
 from Kite import utils
 
@@ -19,10 +20,13 @@ logging.basicConfig(level=logging.INFO,
 
 class JrjSpyder(Spyder):
 
-    def __init__(self):
+    def __init__(self, database_name, collection_name):
         super(JrjSpyder, self).__init__()
-        self.col = self.db_obj.create_col(self.db, config.COLLECTION_NAME_JRJ)
+        self.db_obj = Database()
+        self.col = self.db_obj.conn[database_name].get_collection(collection_name)
         self.terminated_amount = 0
+        self.db_name = database_name
+        self.col_name = collection_name
 
     def get_url_info(self, url, specific_date):
         try:
@@ -137,7 +141,8 @@ class JrjSpyder(Spyder):
                                                         "Url": a["href"],
                                                         "Title": a.string,
                                                         "Article": article}
-                                                self.col.insert_one(data)
+                                                # self.col.insert_one(data)
+                                                self.db_obj.insert_data(self.db_name, self.col_name, data)
                                                 logging.info("[SUCCESS] {} {} {}".format(article_specific_date,
                                                                                          a.string,
                                                                                          a["href"]))
@@ -150,8 +155,12 @@ class JrjSpyder(Spyder):
 
 
 if __name__ == "__main__":
-    jrj_spyder = JrjSpyder()
-    jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2017-05-06", "2018-01-01")
+    jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+    jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2020-11-14", "2020-12-08")
+    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2020-07-06", "2020-12-08")
+    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2018-04-03", "2020-12-06")
+    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2018-01-02", "2020-12-03")
+    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2017-07-18", "2018-01-01")
     # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2016-04-15", "2020-12-03")
 
     # TODO：继续爬取RECORD_JRJ_FAILED_URL_TXT_FILE_PATH文件中失败的URL

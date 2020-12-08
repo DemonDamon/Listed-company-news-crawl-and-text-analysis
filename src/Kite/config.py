@@ -4,7 +4,7 @@ THREAD_NUMS_FOR_SPYDER = 4
 
 DATABASE_NAME = 'finnewshunter'
 
-COLLECTION_NAME_CNSTOCK = 'cnstock'
+COLLECTION_NAME_CNSTOCK = 'cnstock_test'
 CHROME_DRIVER = 'D:\\anaconda3\\chromedriver.exe'
 WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK = ['https://company.cnstock.com/company/scp_gsxw',
                                        'https://ggjd.cnstock.com/gglist/search/qmtbbdj',
@@ -19,12 +19,13 @@ WEBSITES_LIST_TO_BE_CRAWLED_JRJ = "http://stock.jrj.com.cn/xwk"
 RECORD_JRJ_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\jrj_failed_urls.txt"
 JRJ_MAX_REJECTED_AMOUNTS = 10
 
-COLLECTION_NAME_NBD = 'nbd'
+COLLECTION_NAME_NBD = 'nbd_test'
 WEBSITES_LIST_TO_BE_CRAWLED_NBD = 'http://stocks.nbd.com.cn/columns/275/page'
 RECORD_NBD_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\nbd_failed_urls.txt"
 NBD_TOTAL_PAGES_NUM = 684
 NBD_MAX_REJECTED_AMOUNTS = 10
 
 TUSHARE_TOKEN = "97fbc4c73727b5d171ca6670cbc4af8b0a3de5fbab74b52f30b598cc"
-TUSHARE_DATABASE_NAME = 'tushare'
-COLLECTION_NAME_STOCK_BASIC_INFO = "stock_basic_info"
+STOCK_DATABASE_NAME = 'stock_test'
+COLLECTION_NAME_STOCK_BASIC_INFO = "basic_info"
+STOCK_DAILY_EXCEPTION_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\start_stock_code.txt"

@@ -9,6 +9,7 @@
 import __init__
 from spyder import Spyder
 
+from Kite.database import Database
 from Kite import config
 from Kite import utils
 
@@ -26,12 +27,15 @@ logging.basicConfig(level=logging.INFO,
 
 class CnStockSpyder(Spyder):
 
-    def __init__(self):
+    def __init__(self, database_name, collection_name):
         super(CnStockSpyder, self).__init__()
-        self.col = self.db_obj.create_col(self.db, config.COLLECTION_NAME_CNSTOCK)
+        self.db_obj = Database()
+        self.col = self.db_obj.conn[database_name].get_collection(collection_name)
         self.driver = webdriver.Chrome(executable_path=config.CHROME_DRIVER)
         self.btn_more_text = ""
         self.terminated_amount = 0
+        self.db_name = database_name
+        self.col_name = collection_name
 
     def get_url_info(self, url):
         try:
@@ -132,12 +136,13 @@ class CnStockSpyder(Spyder):
                                 "Url": a["href"],
                                 "Title": a["title"],
                                 "Article": article}
-                        self.col.insert_one(data)
+                        # self.col.insert_one(data)
+                        self.db_obj.insert_data(self.db_name, self.col_name, data)
                         logging.info("[SUCCESS] {} {} {}".format(date, a["title"], a["href"]))
 
 
 if __name__ == '__main__':
-    cnstock_spyder = CnStockSpyder()
+    cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
     for url_to_be_crawled in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK:
         logging.info("start crawling {} ...".format(url_to_be_crawled))
         cnstock_spyder.get_historical_news(url_to_be_crawled)
