@@ -22,7 +22,8 @@ from Gon.nbd_spyder import NbdSpyder
 
 
 # 1.1 针对历史数据进行去重清洗
-
+from Killua.deduplication import Deduplication
+# Deduplication("finnewshunter", "jrj").run()  # 暂时只有jrj需要去重
 
 # 2. 抽取出新闻中所涉及的股票，并保存其股票代码在collection中新的一列
 from Leorio.tokenization import Tokenization

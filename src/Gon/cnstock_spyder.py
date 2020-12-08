@@ -65,8 +65,9 @@ class CnStockSpyder(Spyder):
         return [date, article]
 
     def get_historical_news(self, url):
-        crawled_urls_list = self.extract_data(["Url"])[0]
-        logging.info("historical data length -> {} ... ".format(len(crawled_urls_list)))
+        # crawled_urls_list = self.extract_data(["Url"])[0]
+        # logging.info("historical data length -> {} ... ".format(len(crawled_urls_list)))
+        crawled_urls_list = []
         self.driver.get(url)
         while self.btn_more_text != "没有更多":
             more_btn = self.driver.find_element_by_id('j_more_btn')

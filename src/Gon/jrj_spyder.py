@@ -72,8 +72,7 @@ class JrjSpyder(Spyder):
         #                                                                           latest_date_str,
         #                                                                           len(crawled_urls_list)))
 
-        crawled_urls_list = list()
-
+        crawled_urls_list = []
         dates_list = utils.get_date_list_from_range(start_date, end_date)
         dates_separated_into_ranges_list = utils.gen_dates_list(dates_list, config.JRJ_DATE_RANGE)
 
