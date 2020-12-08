@@ -2,12 +2,10 @@ import __init__
 
 from Kite.database import Database
 from Kite import config
-from pymongo import MongoClient
 from Kite import utils
 
 import jieba
 import pkuseg
-from bson.objectid import ObjectId
 
 
 class Tokenization(object):
@@ -17,25 +15,30 @@ class Tokenization(object):
         self.database = Database()
         self.import_module = import_module
         self.user_dict = user_dict
+        if self.user_dict:
+            self.update_user_dict(self.user_dict)
         if chn_stop_words_dir:
             self.stop_words_list = utils.get_chn_stop_words(chn_stop_words_dir)
         else:
             self.stop_words_list = list()
 
-    @staticmethod
-    def update_user_dict(old_user_dict_dir, new_words_list, new_user_dict_dir=None):
+    def update_user_dict(self, old_user_dict_dir, new_user_dict_dir=None):
+        # 将缺失的(或新的)股票名称、金融新词等，添加进金融词典中
         word_list = []
         with open(old_user_dict_dir, "r", encoding="utf-8") as file:
             for row in file:
                 word_list.append(row.split("\n")[0])
-        for word in list(set(new_words_list)):
+        name_code_df = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                              config.COLLECTION_NAME_STOCK_BASIC_INFO,
+                                              keys=["name", "code"])
+        new_words_list = list(set(name_code_df["name"].tolist()))
+        for word in new_words_list:
             if word not in word_list:
                 word_list.append(word)
         new_user_dict_dir = old_user_dict_dir if not new_user_dict_dir else new_user_dict_dir
         with open(new_user_dict_dir, "w", encoding="utf-8") as file:
             for word in word_list:
                 file.write(word + "\n")
-        return word_list
 
     def cut_words(self, text):
         outstr = list()
@@ -58,7 +61,6 @@ class Tokenization(object):
     def find_relevant_stock_codes_in_article(self, article, stock_name_code_dict):
         stock_codes_set = list()
         cut_words_list = self.cut_words(article)
-        print(cut_words_list)
         if cut_words_list:
             for word in cut_words_list:
                 try:
@@ -66,18 +68,6 @@ class Tokenization(object):
                 except Exception:
                     pass
             return list(set(stock_codes_set))
-        else:
-            return False
-
-    def _get_stock_name_and_code(self, database_name, collection_name):
-        name_code_dict = {}
-        data = self.database.get_collection(database_name, collection_name).find()
-        for row in data:
-            # e.g. row={'_id': ObjectId('5fc9ed37280b97e74ca65894'),
-            # 'symbol': 'sz000001', 'code': '000001', 'name': '平安银行'}
-            name_code_dict.update({row["name"]: row["code"]})
-        if name_code_dict:
-            return name_code_dict
         else:
             return False
 
@@ -102,7 +92,7 @@ class Tokenization(object):
 
 
 if __name__ == "__main__":
-    tokenization = Tokenization(import_module="jieba")
+    tokenization = Tokenization(import_module="jieba", user_dict="finance_dict.txt")
     # documents_list = \
     #     [
     #         "中央、地方支持政策频出,煤炭行业站上了风口 券商研报浩如烟海，投资线索眼花缭乱，\
@@ -115,5 +105,4 @@ if __name__ == "__main__":
     # for text in documents_list:
     #     cut_words_list = tokenization.cut_words(text)
     #     print(cut_words_list)
-    tokenization.update_user_dict()
     tokenization.update_news_database_rows(config.DATABASE_NAME, "nbd_test")
