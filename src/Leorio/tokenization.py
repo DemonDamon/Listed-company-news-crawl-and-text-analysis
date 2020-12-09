@@ -93,12 +93,12 @@ class Tokenization(object):
                                          {"_id": row["_id"]},
                                          {"RelatedStockCodes": " ".join(related_stock_codes_list)}
                                          )
-                logging.info("{} -> {} -> {} updated RelatedStockCodes key value ... "
-                             .format(database_name, collection_name, row["_id"]))
+                logging.info("[{} -> {} -> {}] updated RelatedStockCodes key value ... "
+                             .format(database_name, collection_name, row["Date"]))
 
 
 if __name__ == "__main__":
-    tokenization = Tokenization(import_module="jieba", user_dict="finance_dict.txt")
+    tokenization = Tokenization(import_module="jieba", user_dict="financedict.txt")
     # documents_list = \
     #     [
     #         "中央、地方支持政策频出,煤炭行业站上了风口 券商研报浩如烟海，投资线索眼花缭乱，\
