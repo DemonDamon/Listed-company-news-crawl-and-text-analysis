@@ -29,3 +29,5 @@ TUSHARE_TOKEN = "97fbc4c73727b5d171ca6670cbc4af8b0a3de5fbab74b52f30b598cc"
 STOCK_DATABASE_NAME = 'stock'
 COLLECTION_NAME_STOCK_BASIC_INFO = "basic_info"
 STOCK_DAILY_EXCEPTION_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\start_stock_code.txt"
+
+ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE = "stocknews"

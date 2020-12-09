@@ -85,17 +85,17 @@ class Tokenization(object):
         name_code_dict = dict(name_code_df.values)
         data = self.database.get_collection(database_name, collection_name).find()
         for row in data:
-            # if row["Date"] > "2015-02-24 15:14:37":
-            related_stock_codes_list = self.find_relevant_stock_codes_in_article(
-                                         row["Article"], name_code_dict)
-            if related_stock_codes_list:
-                self.database.update_row(database_name,
-                                         collection_name,
-                                         {"_id": row["_id"]},
-                                         {"RelatedStockCodes": " ".join(related_stock_codes_list)}
-                                         )
-                logging.info("[{} -> {} -> {}] updated RelatedStockCodes key value ... "
-                             .format(database_name, collection_name, row["Date"]))
+            if row["Date"] > "2015-05-11 01:24:57":
+                related_stock_codes_list = self.find_relevant_stock_codes_in_article(
+                                             row["Article"], name_code_dict)
+                if related_stock_codes_list:
+                    self.database.update_row(database_name,
+                                             collection_name,
+                                             {"_id": row["_id"]},
+                                             {"RelatedStockCodes": " ".join(related_stock_codes_list)}
+                                             )
+                    logging.info("[{} -> {} -> {}] updated RelatedStockCodes key value ... "
+                                 .format(database_name, collection_name, row["Date"]))
 
 
 if __name__ == "__main__":

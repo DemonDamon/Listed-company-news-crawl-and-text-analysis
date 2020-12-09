@@ -22,6 +22,8 @@ class Deduplication(object):
                                            self.collection_name,
                                            keys=["Date"])["Date"].tolist()
         collection = self.database.get_collection(self.database_name, self.collection_name)
+        date_list.sort()  # 升序
+        # start_date, end_date = date_list[1].split(" ")[0], date_list[-1].split(" ")[0]
         start_date, end_date = min(date_list).split(" ")[0], max(date_list).split(" ")[0]
         for _date in utils.get_date_list_from_range(start_date, end_date):
             # 获取特定时间对应的数据并根据URL去重
@@ -43,6 +45,7 @@ class Deduplication(object):
 
 if __name__ == "__main__":
     Deduplication("finnewshunter", "jrj").run()
+    Deduplication("stock", "basic_info").run()
 
 
 

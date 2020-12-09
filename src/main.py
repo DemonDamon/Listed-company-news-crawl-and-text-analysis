@@ -23,15 +23,32 @@ from Gon.nbdspyder import NbdSpyder
 
 # 1.1 针对历史数据进行去重清洗
 from Killua.deduplication import Deduplication
+# Deduplication("finnewshunter", "cnstock").run()
+# Deduplication("finnewshunter", "nbd").run()
 # Deduplication("finnewshunter", "jrj").run()  # 暂时只有jrj需要去重
+
+
+# 1.2 将历史数据中包含null值的行去掉
+from Killua.denull import DeNull
+# DeNull("finnewshunter", "cnstock").run()
+# DeNull("finnewshunter", "nbd").run()
+# DeNull("finnewshunter", "jrj").run()
 
 
 # 2. 抽取出新闻中所涉及的股票，并保存其股票代码在collection中新的一列
 from Leorio.tokenization import Tokenization
-tokenization = Tokenization(import_module="jieba", user_dict="./Leorio/financedict.txt")
+# tokenization = Tokenization(import_module="jieba", user_dict="./Leorio/financedict.txt")
 # tokenization.update_news_database_rows(config.DATABASE_NAME, "cnstock")
 # tokenization.update_news_database_rows(config.DATABASE_NAME, "nbd")
-tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
+# tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
 
 
 # 3. 创建新的数据库，针对每一个股票，将所有涉及该股票的新闻都保存在新的数据库
+from Killua.buildstocknewsdb import GenStockNewsDB
+gen_stock_news_db = GenStockNewsDB()
+# gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "cnstock")
+gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "nbd")
+# gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "jrj")
+
+
+# 4.

@@ -84,4 +84,5 @@ class StockInfoSpyder(Spyder):
 
 if __name__ == "__main__":
     stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
-    stock_info_spyder.get_historical_news("20150101", "20201204")
+    stock_info_spyder.get_stock_code_info()
+    # stock_info_spyder.get_historical_news("20150101", "20201204")
