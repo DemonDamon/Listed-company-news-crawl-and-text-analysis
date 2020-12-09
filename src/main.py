@@ -3,7 +3,7 @@ import time
 import logging
 from Kite import config
 from Gon.jrj_spyder import JrjSpyder
-from Gon.cnstock_spyder import CnStockSpyder
+from Gon.cnstockspyder import CnStockSpyder
 from Gon.nbd_spyder import NbdSpyder
 
 # cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
