@@ -2,9 +2,9 @@
 import time
 import logging
 from Kite import config
-from Gon.jrj_spyder import JrjSpyder
+from Gon.jrjspyder import JrjSpyder
 from Gon.cnstockspyder import CnStockSpyder
-from Gon.nbd_spyder import NbdSpyder
+from Gon.nbdspyder import NbdSpyder
 
 # cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
 # for url_to_be_crawled in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK:
@@ -31,7 +31,7 @@ from Leorio.tokenization import Tokenization
 tokenization = Tokenization(import_module="jieba", user_dict="./Leorio/financedict.txt")
 # tokenization.update_news_database_rows(config.DATABASE_NAME, "cnstock")
 # tokenization.update_news_database_rows(config.DATABASE_NAME, "nbd")
-# tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
+tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
 
 
 # 3. 创建新的数据库，针对每一个股票，将所有涉及该股票的新闻都保存在新的数据库

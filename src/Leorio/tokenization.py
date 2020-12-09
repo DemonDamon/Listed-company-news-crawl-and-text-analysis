@@ -85,6 +85,7 @@ class Tokenization(object):
         name_code_dict = dict(name_code_df.values)
         data = self.database.get_collection(database_name, collection_name).find()
         for row in data:
+            # if row["Date"] > "2015-02-24 15:14:37":
             related_stock_codes_list = self.find_relevant_stock_codes_in_article(
                                          row["Article"], name_code_dict)
             if related_stock_codes_list:
