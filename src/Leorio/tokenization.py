@@ -6,6 +6,11 @@ from Kite import utils
 
 import jieba
 import pkuseg
+import logging
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                    datefmt='%a, %d %b %Y %H:%M:%S')
 
 
 class Tokenization(object):
@@ -82,13 +87,14 @@ class Tokenization(object):
         for row in data:
             related_stock_codes_list = self.find_relevant_stock_codes_in_article(
                                          row["Article"], name_code_dict)
-            self.database.update_row(database_name,
-                                     collection_name,
-                                     {"_id": row["_id"]},
-                                     {"RelatedStockCodes": " ".join(related_stock_codes_list)}
-                                     )
-            # col.update_one({"_id": row["_id"]}, {"$set": {"RelatedStockCodes": " ".join(
-            #                self.find_relevant_stock_codes_in_article(row["Article"], name_code_dict))}})
+            if related_stock_codes_list:
+                self.database.update_row(database_name,
+                                         collection_name,
+                                         {"_id": row["_id"]},
+                                         {"RelatedStockCodes": " ".join(related_stock_codes_list)}
+                                         )
+                logging.info("{} -> {} -> {} updated RelatedStockCodes key value ... "
+                             .format(database_name, collection_name, row["_id"]))
 
 
 if __name__ == "__main__":

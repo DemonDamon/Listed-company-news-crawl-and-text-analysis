@@ -25,10 +25,13 @@ from Gon.nbd_spyder import NbdSpyder
 from Killua.deduplication import Deduplication
 # Deduplication("finnewshunter", "jrj").run()  # 暂时只有jrj需要去重
 
+
 # 2. 抽取出新闻中所涉及的股票，并保存其股票代码在collection中新的一列
 from Leorio.tokenization import Tokenization
-# tokenization = Tokenization(import_module="jieba", user_dict="finance_dict.txt")
-# tokenization.update_news_database_rows(config.DATABASE_NAME, "nbd_test")
+tokenization = Tokenization(import_module="jieba", user_dict="./Leorio/finance_dict.txt")
+# tokenization.update_news_database_rows(config.DATABASE_NAME, "cnstock")
+# tokenization.update_news_database_rows(config.DATABASE_NAME, "nbd")
+tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
 
 
 # 3. 创建新的数据库，针对每一个股票，将所有涉及该股票的新闻都保存在新的数据库
