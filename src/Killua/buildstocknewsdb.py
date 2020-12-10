@@ -39,7 +39,8 @@ class GenStockNewsDB(object):
                     # 返回新闻发布后n天的标签
                     _tmp_dict = {}
                     for label_days, key_name in self.label_range.items():
-                        _tmp_dict.update({key_name: self._label_news(row["Date"], symbol, label_days)})
+                        _tmp_dict.update({key_name: self._label_news(
+                            datetime.datetime.strptime(row["Date"].split(" ")[0], "%Y-%m-%d"), symbol, label_days)})
                     _data = {"Date": row["Date"],
                              "Url": row["Url"],
                              "Title": row["Title"],
@@ -64,10 +65,18 @@ class GenStockNewsDB(object):
                                                        symbol,
                                                        query={"date": date}
                                                        )["close"][0]
-        close_price_n_days_later = self.database.get_data(config.STOCK_DATABASE_NAME,
-                                                          symbol,
-                                                          query={"date": new_date}
-                                                          )["close"][0]
+        print("!!!", symbol, new_date, close_price_this_date)
+        try:
+            close_price_n_days_later = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                                              symbol,
+                                                              query={"date": new_date}
+                                                              )["close"][0]
+        except Exception:
+            # 数据表中没有当天的数据，即大概率因为当天没有交易。由于假期最长是7天，因此最多循环8次，找到交易日
+            # 在循环中间一旦找到就退出循环，例如新闻发布后第60天是国庆，那么寻找7天后的交易日收盘价作为该新闻
+            # 第60日后的收盘价
+            for _ in range(8):
+                
         if close_price_this_date > close_price_n_days_later:
             return "利好"
         elif close_price_this_date < close_price_n_days_later:
