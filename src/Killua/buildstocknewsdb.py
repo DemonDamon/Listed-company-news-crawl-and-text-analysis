@@ -57,26 +57,44 @@ class GenStockNewsDB(object):
         """
         :param date: 类型datetime.datetime，表示新闻发布的日期，只包括年月日，不包括具体时刻，如2020-12-09
         :param symbol: 类型str，表示股票标的，如sh600000
-        :param n_days: 类型str，表示根据多少天后的价格设定标签，如新闻发布后n_days天，如果收盘价格上涨，则认为该则新闻是利好消息
+        :param n_days: 类型int，表示根据多少天后的价格设定标签，如新闻发布后n_days天，如果收盘价格上涨，则认为该则新闻是利好消息
         """
         # 计算新闻发布当天经过n_days天后的具体年月日
         new_date = date + datetime.timedelta(days=n_days)
-        close_price_this_date = self.database.get_data(config.STOCK_DATABASE_NAME,
-                                                       symbol,
-                                                       query={"date": date}
-                                                       )["close"][0]
-        print("!!!", symbol, new_date, close_price_this_date)
-        try:
-            close_price_n_days_later = self.database.get_data(config.STOCK_DATABASE_NAME,
-                                                              symbol,
-                                                              query={"date": new_date}
-                                                              )["close"][0]
-        except Exception:
-            # 数据表中没有当天的数据，即大概率因为当天没有交易。由于假期最长是7天，因此最多循环8次，找到交易日
-            # 在循环中间一旦找到就退出循环，例如新闻发布后第60天是国庆，那么寻找7天后的交易日收盘价作为该新闻
-            # 第60日后的收盘价
-            for _ in range(8):
-                
+        this_date_data = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                                symbol,
+                                                query={"date": date}
+                                                )
+        # 考虑情况：新闻发布日期是非交易日，因此该日期没有价格数据，则往前寻找，比如新闻发布日期是2020-12-12是星期六，
+        # 则考虑2020-12-11日的收盘价作为该新闻发布时的数据
+        tmp_date = date
+        if not this_date_data:
+            i = 1
+            while not this_date_data:
+                tmp_date -= datetime.timedelta(days=i)
+                this_date_data = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                                        symbol,
+                                                        query={"date": tmp_date}
+                                                        )
+                i += 1
+        close_price_this_date = this_date_data["close"][0]
+
+        # 考虑情况：新闻发布后n_days天是非交易日，或者没有采集到数据，因此向后寻找，如新闻发布日期是2020-12-08，5天
+        # 后的日期是2020-12-13是周日，因此将2020-12-14日周一的收盘价作为n_days后的数据
+        n_days_later_data = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                                   symbol,
+                                                   query={"date": new_date}
+                                                   )
+        if not n_days_later_data:
+            i = 1
+            while not n_days_later_data:
+                new_date = date + datetime.timedelta(days=n_days+i)
+                n_days_later_data = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                                           symbol,
+                                                           query={"date": new_date}
+                                                           )
+                i += 1
+        close_price_n_days_later = n_days_later_data["close"][0]
         if close_price_this_date > close_price_n_days_later:
             return "利好"
         elif close_price_this_date < close_price_n_days_later:

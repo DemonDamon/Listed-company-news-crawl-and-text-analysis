@@ -30,7 +30,7 @@ class Database(object):
 	def get_data(self, database_name, collection_name, max_data_request=None, query=None, keys=None):
 		# e.g.:
 		# ExampleObj = Database()
-		# name_code_df = ExampleObj.get_data("finnewshunter", "nbd", query={"Date": {"$regex": "2014"}}, keys=["Url", "Title"])
+		# ExampleObj.get_data("finnewshunter", "nbd", query={"Date": {"$regex": "2014"}}, keys=["Url", "Title"])
 		database = self.conn[database_name]
 		collection = database.get_collection(collection_name)
 		if query:
@@ -45,28 +45,31 @@ class Database(object):
 			assert isinstance(max_data_request, int)
 		else:
 			max_data_request = float("inf")
-		if len(keys) != 0:
-			_dict = {_key: [] for _key in keys}
-			data = collection.find(query) if len(query) != 0 else collection.find()
-			for _id, row in enumerate(data):
-				if _id + 1 <= max_data_request:
-					for _key in keys:
-						_dict[_key].append(row[_key])
-				else:
-					break
-		else:
-			# data = collection.find()
-			data = collection.find(query) if len(query) != 0 else collection.find()
-			data_keys = list(
-				next(data).keys())  # ['_id', 'Date', 'PageId', 'Url', 'Title', 'Article', 'RelevantStockCodes']
-			_dict = {_key: [] for _key in data_keys}
-			for _id, row in enumerate(collection.find(query) if len(query) != 0 else collection.find()):
-				if _id + 1 <= max_data_request:
-					for _key in data_keys:
-						_dict[_key].append(row[_key])
-				else:
-					break
-		return pd.DataFrame(_dict)
+		try:
+			if len(keys) != 0:
+				_dict = {_key: [] for _key in keys}
+				data = collection.find(query) if len(query) != 0 else collection.find()
+				for _id, row in enumerate(data):
+					if _id + 1 <= max_data_request:
+						for _key in keys:
+							_dict[_key].append(row[_key])
+					else:
+						break
+			else:
+				# data = collection.find()
+				data = collection.find(query) if len(query) != 0 else collection.find()
+				data_keys = list(
+					next(data).keys())  # ['_id', 'Date', 'PageId', 'Url', 'Title', 'Article', 'RelevantStockCodes']
+				_dict = {_key: [] for _key in data_keys}
+				for _id, row in enumerate(collection.find(query) if len(query) != 0 else collection.find()):
+					if _id + 1 <= max_data_request:
+						for _key in data_keys:
+							_dict[_key].append(row[_key])
+					else:
+						break
+			return pd.DataFrame(_dict)
+		except Exception:
+			return False
 
 	def drop_db(self, database):
 		self.conn.drop_database(database)
