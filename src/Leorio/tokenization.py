@@ -85,7 +85,7 @@ class Tokenization(object):
         name_code_dict = dict(name_code_df.values)
         data = self.database.get_collection(database_name, collection_name).find()
         for row in data:
-            if row["Date"] > "2015-05-11 01:24:57":
+            # if row["Date"] > "2015-12-21 15:03:50":
                 related_stock_codes_list = self.find_relevant_stock_codes_in_article(
                                              row["Article"], name_code_dict)
                 if related_stock_codes_list:
@@ -112,4 +112,4 @@ if __name__ == "__main__":
     # for text in documents_list:
     #     cut_words_list = tokenization.cut_words(text)
     #     print(cut_words_list)
-    tokenization.update_news_database_rows(config.DATABASE_NAME, "nbd_test")
+    tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")

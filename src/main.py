@@ -45,9 +45,9 @@ from Leorio.tokenization import Tokenization
 
 # 3. 创建新的数据库，针对每一个股票，将所有涉及该股票的新闻都保存在新的数据库
 from Killua.buildstocknewsdb import GenStockNewsDB
-gen_stock_news_db = GenStockNewsDB()
+# gen_stock_news_db = GenStockNewsDB()
 # gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "cnstock")
-gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "nbd")
+# gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "nbd")
 # gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "jrj")
 
 
