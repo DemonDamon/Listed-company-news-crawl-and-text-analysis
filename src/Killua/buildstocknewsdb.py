@@ -1,6 +1,7 @@
 import __init__
 import logging
 import datetime
+import akshare as ak
 
 from Kite import config
 from Kite.database import Database
@@ -15,6 +16,8 @@ class GenStockNewsDB(object):
 
     def __init__(self):
         self.database = Database()
+        # 获取从1990-12-19至2020-12-31股票交易日数据
+        self.trade_date = ak.tool_trade_date_hist_sina()["trade_date"].tolist()
         self.label_range = {3: "3DaysLabel",
                             5: "5DaysLabel",
                             10: "10DaysLabel",
@@ -39,8 +42,10 @@ class GenStockNewsDB(object):
                     # 返回新闻发布后n天的标签
                     _tmp_dict = {}
                     for label_days, key_name in self.label_range.items():
-                        _tmp_dict.update({key_name: self._label_news(
-                            datetime.datetime.strptime(row["Date"].split(" ")[0], "%Y-%m-%d"), symbol, label_days)})
+                        _tmp_res = self._label_news(
+                            datetime.datetime.strptime(row["Date"].split(" ")[0], "%Y-%m-%d"), symbol, label_days)
+                        if _tmp_res:
+                            _tmp_dict.update({key_name: _tmp_res})
                     _data = {"Date": row["Date"],
                              "Url": row["Url"],
                              "Title": row["Title"],
@@ -55,56 +60,73 @@ class GenStockNewsDB(object):
 
     def _label_news(self, date, symbol, n_days):
         """
-        :param date: 类型datetime.datetime，表示新闻发布的日期，只包括年月日，不包括具体时刻，如2020-12-09
+        :param date: 类型datetime.datetime，表示新闻发布的日期，只包括年月日，不包括具体时刻，如datetime.datetime(2015, 1, 5, 0, 0)
         :param symbol: 类型str，表示股票标的，如sh600000
         :param n_days: 类型int，表示根据多少天后的价格设定标签，如新闻发布后n_days天，如果收盘价格上涨，则认为该则新闻是利好消息
         """
         # 计算新闻发布当天经过n_days天后的具体年月日
-        new_date = date + datetime.timedelta(days=n_days)
         this_date_data = self.database.get_data(config.STOCK_DATABASE_NAME,
                                                 symbol,
-                                                query={"date": date}
-                                                )
+                                                query={"date": date})
         # 考虑情况：新闻发布日期是非交易日，因此该日期没有价格数据，则往前寻找，比如新闻发布日期是2020-12-12是星期六，
         # 则考虑2020-12-11日的收盘价作为该新闻发布时的数据
         tmp_date = date
-        if not this_date_data:
+        if this_date_data is None:
             i = 1
-            while not this_date_data:
+            while this_date_data is None and i <= 10:
                 tmp_date -= datetime.timedelta(days=i)
-                this_date_data = self.database.get_data(config.STOCK_DATABASE_NAME,
-                                                        symbol,
-                                                        query={"date": tmp_date}
-                                                        )
+                # 判断日期是否是交易日，如果是再去查询数据库；如果this_date_data还是NULL值，则说明数据库没有该交易日数据
+                if tmp_date.strftime("%Y-%m-%d") in self.trade_date:
+                    this_date_data = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                                            symbol,
+                                                            query={"date": tmp_date})
                 i += 1
-        close_price_this_date = this_date_data["close"][0]
-
+        try:
+            close_price_this_date = this_date_data["close"][0]
+        except Exception:
+            close_price_this_date = None
         # 考虑情况：新闻发布后n_days天是非交易日，或者没有采集到数据，因此向后寻找，如新闻发布日期是2020-12-08，5天
         # 后的日期是2020-12-13是周日，因此将2020-12-14日周一的收盘价作为n_days后的数据
+        new_date = date + datetime.timedelta(days=n_days)
         n_days_later_data = self.database.get_data(config.STOCK_DATABASE_NAME,
                                                    symbol,
-                                                   query={"date": new_date}
-                                                   )
-        if not n_days_later_data:
+                                                   query={"date": new_date})
+        if n_days_later_data is None:
             i = 1
-            while not n_days_later_data:
+            while n_days_later_data is None and i <= 10:
                 new_date = date + datetime.timedelta(days=n_days+i)
-                n_days_later_data = self.database.get_data(config.STOCK_DATABASE_NAME,
-                                                           symbol,
-                                                           query={"date": new_date}
-                                                           )
+                if new_date.strftime("%Y-%m-%d") in self.trade_date:
+                    n_days_later_data = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                                               symbol,
+                                                               query={"date": new_date})
                 i += 1
-        close_price_n_days_later = n_days_later_data["close"][0]
-        if close_price_this_date > close_price_n_days_later:
-            return "利好"
-        elif close_price_this_date < close_price_n_days_later:
-            return "利空"
+        try:
+            close_price_n_days_later = n_days_later_data["close"][0]
+        except Exception:
+            close_price_n_days_later = None
+        # 判断条件：
+        # （1）如果n_days个交易日后且n_days<=10天，则价格上涨(下跌)超过3%，则认为该新闻是利好(利空)消息；如果价格在3%的范围内，则为中性消息
+        # （2）如果n_days个交易日后且10<n_days<=15天，则价格上涨(下跌)超过5%，则认为该新闻是利好(利空)消息；如果价格在5%的范围内，则为中性消息
+        # （3）如果n_days个交易日后且15<n_days<=30天，则价格上涨(下跌)超过10%，则认为该新闻是利好(利空)消息；如果价格在10%的范围内，则为中性消息
+        # （4）如果n_days个交易日后且30<n_days<=60天，则价格上涨(下跌)超过15%，则认为该新闻是利好(利空)消息；如果价格在15%的范围内，则为中性消息
+        # Note：中性消息定义为，该消息迅速被市场消化，并没有持续性影响
+        if n_days <= 10:
+            param = 0.03
+        elif 10 < n_days <= 15:
+            param = 0.05
+        elif 15 < n_days <= 30:
+            param = 0.10
+        elif 30 < n_days <= 60:
+            param = 0.15
+        if close_price_this_date is not None and close_price_n_days_later is not None:
+            if (close_price_n_days_later - close_price_this_date) / close_price_this_date > param:
+                return "利好"
+            elif (close_price_n_days_later - close_price_this_date) / close_price_this_date < -param:
+                return "利空"
+            else:
+                return "中性"
         else:
             return False
-
-
-
-
 
 
 if __name__ == "__main__":

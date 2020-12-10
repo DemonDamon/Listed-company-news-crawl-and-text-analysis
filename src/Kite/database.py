@@ -69,7 +69,7 @@ class Database(object):
 						break
 			return pd.DataFrame(_dict)
 		except Exception:
-			return False
+			return None
 
 	def drop_db(self, database):
 		self.conn.drop_database(database)
