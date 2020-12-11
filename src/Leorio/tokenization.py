@@ -72,9 +72,7 @@ class Tokenization(object):
                     stock_codes_set.append(stock_name_code_dict[word])
                 except Exception:
                     pass
-            return list(set(stock_codes_set))
-        else:
-            return False
+        return list(set(stock_codes_set))
 
     def update_news_database_rows(self,
                                   database_name,
@@ -85,21 +83,42 @@ class Tokenization(object):
         name_code_dict = dict(name_code_df.values)
         data = self.database.get_collection(database_name, collection_name).find()
         for row in data:
-            # if row["Date"] > "2015-12-21 15:03:50":
+            if row["Date"] > "2018-10-12 17:09:47":
                 related_stock_codes_list = self.find_relevant_stock_codes_in_article(
                                              row["Article"], name_code_dict)
-                if related_stock_codes_list:
-                    self.database.update_row(database_name,
-                                             collection_name,
-                                             {"_id": row["_id"]},
-                                             {"RelatedStockCodes": " ".join(related_stock_codes_list)}
-                                             )
-                    logging.info("[{} -> {} -> {}] updated RelatedStockCodes key value ... "
-                                 .format(database_name, collection_name, row["Date"]))
+                self.database.update_row(database_name,
+                                         collection_name,
+                                         {"_id": row["_id"]},
+                                         {"RelatedStockCodes": " ".join(related_stock_codes_list)}
+                                         )
+                logging.info("[{} -> {} -> {}] updated RelatedStockCodes key value ... "
+                             .format(database_name, collection_name, row["Date"]))
+
+    def tmp_function(self, database_name, collection_name):
+        data = self.database.get_collection(database_name, collection_name).find()
+        for row in data:
+            if "RelatedStockCodes" not in row.keys():
+                self.database.update_row(database_name,
+                                         collection_name,
+                                         {"_id": row["_id"]},
+                                         {"RelatedStockCodes": " ".join([])}
+                                         )
+                logging.info("{} didn't have RelatedStockCodes".format(row["Date"]))
+
+    def tmp_func_2(self, database_name, collection_name):
+        data = self.database.get_collection(database_name, collection_name).find()
+        tmp = []
+        for row in data:
+            if "RelatedStockCodes" in row.keys():
+                tmp.append(row["Date"])
+        _id = tmp.index(max(tmp))
+        return tmp[_id]
 
 
 if __name__ == "__main__":
-    tokenization = Tokenization(import_module="jieba", user_dict="financedict.txt")
+    tokenization = Tokenization(import_module="jieba",
+                                user_dict="financedict.txt",
+                                chn_stop_words_dir="chnstopwords.txt")
     # documents_list = \
     #     [
     #         "中央、地方支持政策频出,煤炭行业站上了风口 券商研报浩如烟海，投资线索眼花缭乱，\
@@ -113,3 +132,5 @@ if __name__ == "__main__":
     #     cut_words_list = tokenization.cut_words(text)
     #     print(cut_words_list)
     tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
+    # print(tokenization.tmp_func_2(config.DATABASE_NAME, "jrj"))
+    # tokenization.tmp_function(config.DATABASE_NAME, "nbd")

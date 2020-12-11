@@ -31,3 +31,5 @@ COLLECTION_NAME_STOCK_BASIC_INFO = "basic_info"
 STOCK_DAILY_EXCEPTION_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\start_stock_code.txt"
 
 ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE = "stocknews"
+
+TOPIC_NUMBER = 200
