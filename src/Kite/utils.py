@@ -2,6 +2,7 @@ import re
 import datetime
 import requests
 from bs4 import BeautifulSoup
+from scipy.sparse import csr_matrix
 
 
 def generate_pages_list(total_pages, range, init_page_id):
@@ -99,3 +100,25 @@ def get_chn_stop_words(path):
 
     return stopwords
 
+
+def convert_to_csr_matrix(model_vector):
+    """
+    Convert LDA(LSI) model vector to CSR sparse matrix, that could be accepted by Scipy and Numpy.
+
+    # Arguments:
+        modelVec: Transformation model vector, such as LDA model vector, tfidf model vector or lsi model vector.
+    """
+    data = []
+    rows = []
+    cols = []
+    _line_count = 0
+    for line in model_vector:
+        for elem in line:
+            rows.append(_line_count)
+            cols.append(elem[0])
+            data.append(elem[1])
+        _line_count += 1
+    sparse_matrix = csr_matrix((data, (rows, cols)))
+    matrix = sparse_matrix.toarray()
+
+    return matrix

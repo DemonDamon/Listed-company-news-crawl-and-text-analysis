@@ -83,7 +83,7 @@ class Tokenization(object):
         name_code_dict = dict(name_code_df.values)
         data = self.database.get_collection(database_name, collection_name).find()
         for row in data:
-            if row["Date"] > "2018-10-12 17:09:47":
+            # if row["Date"] > "2019-05-20 00:00:00":
                 related_stock_codes_list = self.find_relevant_stock_codes_in_article(
                                              row["Article"], name_code_dict)
                 self.database.update_row(database_name,
@@ -93,26 +93,6 @@ class Tokenization(object):
                                          )
                 logging.info("[{} -> {} -> {}] updated RelatedStockCodes key value ... "
                              .format(database_name, collection_name, row["Date"]))
-
-    def tmp_function(self, database_name, collection_name):
-        data = self.database.get_collection(database_name, collection_name).find()
-        for row in data:
-            if "RelatedStockCodes" not in row.keys():
-                self.database.update_row(database_name,
-                                         collection_name,
-                                         {"_id": row["_id"]},
-                                         {"RelatedStockCodes": " ".join([])}
-                                         )
-                logging.info("{} didn't have RelatedStockCodes".format(row["Date"]))
-
-    def tmp_func_2(self, database_name, collection_name):
-        data = self.database.get_collection(database_name, collection_name).find()
-        tmp = []
-        for row in data:
-            if "RelatedStockCodes" in row.keys():
-                tmp.append(row["Date"])
-        _id = tmp.index(max(tmp))
-        return tmp[_id]
 
 
 if __name__ == "__main__":
@@ -131,6 +111,4 @@ if __name__ == "__main__":
     # for text in documents_list:
     #     cut_words_list = tokenization.cut_words(text)
     #     print(cut_words_list)
-    tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
-    # print(tokenization.tmp_func_2(config.DATABASE_NAME, "jrj"))
-    # tokenization.tmp_function(config.DATABASE_NAME, "nbd")
+    # tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
