@@ -44,18 +44,19 @@ class TopicModelling(object):
     def transform_vectorized_corpus(self, corpora_dictionary, bow_vector, model_type="lda", model_save_path=None):
         if model_type == "lsi":
             tfidf_vector = models.TfidfModel(bow_vector)[bow_vector]
-            model = models.LsiModel(tfidf_vector, id2word=corpora_dictionary, num_topics=config.TOPIC_NUMBER)  # 初始化模型
+            model = models.LsiModel(tfidf_vector,
+                                    id2word=corpora_dictionary,
+                                    num_topics=config.TOPIC_NUMBER)  # 初始化模型
             model_vector = model[tfidf_vector]
             if model_save_path:
                 model.save(model_save_path)
             return tfidf_vector, model_vector
         elif model_type == "lda":
-            print("1", bow_vector)
             tfidf_vector = models.TfidfModel(bow_vector)[bow_vector]
-            print("2", tfidf_vector)
-            model = models.LdaModel(tfidf_vector, id2word=corpora_dictionary, num_topics=config.TOPIC_NUMBER)  # 初始化模型
+            model = models.LdaModel(tfidf_vector,
+                                    id2word=corpora_dictionary,
+                                    num_topics=config.TOPIC_NUMBER)  # 初始化模型
             model_vector = model[tfidf_vector]
-            print("3", model_vector)
             if model_save_path:
                 model.save(model_save_path)
             return tfidf_vector, model_vector
@@ -93,6 +94,8 @@ if __name__ == "__main__":
         新增死亡病例"
     ]
     _, corpora_dictionary, bow_vector = topicmodelling.create_bag_of_word_representation(raw_documents_list)
-    for _vector in bow_vector:
-        _, model_vector = topicmodelling.transform_vectorized_corpus(corpora_dictionary, _vector, model_type="lda")
-        print(utils.convert_to_csr_matrix(model_vector))
+    # for _vector in bow_vector:
+    _, model_vector = topicmodelling.transform_vectorized_corpus(corpora_dictionary,
+                                                                 bow_vector,
+                                                                 model_type="lsi")
+    print(utils.convert_to_csr_matrix(model_vector))
