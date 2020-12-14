@@ -1,6 +1,7 @@
 import re
 import datetime
 import requests
+import numpy as np
 from bs4 import BeautifulSoup
 from scipy.sparse import csr_matrix
 
@@ -122,3 +123,19 @@ def convert_to_csr_matrix(model_vector):
     matrix = sparse_matrix.toarray()
 
     return matrix
+
+
+def generate_training_set(x, y, split=0.8):
+    rand = np.random.random(size=x.shape[0])
+    train_x = []
+    train_y = []
+    test_x = []
+    test_y = []
+    for i in range(x.shape[0]):
+        if rand[i] < split:
+            train_x.append(x[i, :])
+            train_y.append(y[i])
+        else:
+            test_x.append(x[i, :])
+            test_y.append(y[i])
+    return train_x, train_y, test_x, test_y
