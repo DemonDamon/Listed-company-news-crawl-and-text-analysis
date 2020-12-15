@@ -57,7 +57,11 @@ class Tokenization(object):
             sentence_seged = seg.cut(text)  # 进行分词
         if sentence_seged:
             for word in sentence_seged:
-                if word not in self.stop_words_list and word != "\t" and word != " ":
+                if word not in self.stop_words_list \
+                        and word != "\t" \
+                        and word != " " \
+                        and utils.is_contain_chn(word)\
+                        and len(word) > 1:
                     outstr.append(word)
             return outstr
         else:

@@ -139,3 +139,16 @@ def generate_training_set(x, y, split=0.8):
             test_x.append(x[i, :])
             test_y.append(y[i])
     return train_x, train_y, test_x, test_y
+
+
+def is_contain_chn(word):
+    """
+    判断传入字符串是否包含中文
+    :param word: 待判断字符串
+    :return: True:包含中文  False:不包含中文
+    """
+    zh_pattern = re.compile(u'[\u4e00-\u9fa5]+')
+    if zh_pattern.search(word):
+        return True
+    else:
+        return False

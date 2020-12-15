@@ -42,6 +42,7 @@ class TopicModelling(object):
         return documents_token_list, corpora_dictionary, bow_vector
 
     def transform_vectorized_corpus(self, corpora_dictionary, bow_vector, model_type="lda", model_save_path=None):
+        model_vector = None
         if model_type == "lsi":
             tfidf_vector = models.TfidfModel(bow_vector)[bow_vector]
             model = models.LsiModel(tfidf_vector,
@@ -50,22 +51,19 @@ class TopicModelling(object):
             model_vector = model[tfidf_vector]
             if model_save_path:
                 model.save(model_save_path)
-            return tfidf_vector, model_vector
         elif model_type == "lda":
-            tfidf_vector = models.TfidfModel(bow_vector)[bow_vector]
-            model = models.LdaModel(tfidf_vector,
+            model = models.LdaModel(bow_vector,
                                     id2word=corpora_dictionary,
                                     num_topics=config.TOPIC_NUMBER)  # 初始化模型
-            model_vector = model[tfidf_vector]
+            model_vector = model[bow_vector]
             if model_save_path:
                 model.save(model_save_path)
-            return tfidf_vector, model_vector
         elif model_type == "tfidf":
             model = models.TfidfModel(bow_vector)  # 初始化
-            tfidf_vector = model[bow_vector]  # 将整个语料进行转换
+            model_vector = model[bow_vector]  # 将整个语料进行转换
             if model_save_path:
                 model.save(model_save_path)
-            return tfidf_vector
+        return model_vector
 
     def load_transform_model(self, model_path):
         if ".tfidf" in model_path:
@@ -86,22 +84,22 @@ if __name__ == "__main__":
     raw_documents_list = []
     Y = []
     for row in database.get_collection("stocknews", "sz000001").find():
-        if "3DaysLabel" in row.keys():
+        if "30DaysLabel" in row.keys():
             raw_documents_list.append(row["Article"])
-            if row["3DaysLabel"] == "中性":
-                Y.append(0)
-            elif row["3DaysLabel"] == "利好":
-                Y.append(1)
-            elif row["3DaysLabel"] == "利空":
-                Y.append(2)
+            Y.append(row["30DaysLabel"])
     le = preprocessing.LabelEncoder()
+    Y = le.fit_transform(Y)
 
-    _, corpora_dictionary, bow_vector = topicmodelling.create_bag_of_word_representation(raw_documents_list)
+    _, corpora_dictionary, corpus = topicmodelling.create_bag_of_word_representation(raw_documents_list)
     # for _vector in bow_vector:
-    _, model_vector = topicmodelling.transform_vectorized_corpus(corpora_dictionary,
-                                                                 bow_vector,
-                                                                 model_type="lda")
+    model_vector = topicmodelling.transform_vectorized_corpus(corpora_dictionary,
+                                                              corpus,
+                                                              model_type="lda")
     csr_matrix = utils.convert_to_csr_matrix(model_vector)
     train_x, train_y, test_x, test_y = utils.generate_training_set(csr_matrix, Y)
     classifier = Classifier()
     classifier.svm(train_x, train_y, test_x, test_y)
+
+    # lsi Tue, 15 Dec 2020 14:54:08 classifier.py[line:54] INFO train_pred: 0.9829  test_pred: 0.703 (只是去掉停用词、tab符以及空格符)
+    # lsi Tue, 15 Dec 2020 17:00:58 classifier.py[line:54] INFO train_pred: 0.9852  test_pred: 0.7492(去掉不含中文的词以及只有一个字符的词)
+    # lda Tue, 15 Dec 2020 17:29:56 classifier.py[line:54] INFO train_pred: 0.9498  test_pred: 0.7426(去掉不含中文的词以及只有一个字符的词)
