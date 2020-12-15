@@ -47,8 +47,8 @@ from Leorio.tokenization import Tokenization
 from Killua.buildstocknewsdb import GenStockNewsDB
 gen_stock_news_db = GenStockNewsDB()
 # gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "cnstock")
-gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "nbd")
-# gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "jrj")
+# gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "nbd")
+gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "jrj")
 
 
 # 4.

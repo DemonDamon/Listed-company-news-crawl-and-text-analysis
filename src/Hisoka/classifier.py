@@ -4,9 +4,9 @@ import warnings
 
 from Kite import config
 
+import joblib
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.externals import joblib
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 import sklearn.exceptions
@@ -14,6 +14,11 @@ import sklearn.exceptions
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
                     datefmt="%a, %d %b %Y %H:%M:%S")
+
+warnings.filterwarnings("ignore", category=sklearn.exceptions.UndefinedMetricWarning)
+warnings.filterwarnings("ignore", category=Warning, module='sklearn')
+warnings.filterwarnings("ignore", category=UserWarning, module='gensim')
+warnings.filterwarnings("ignore", category=RuntimeWarning, module='gensim')
 
 
 class Classifier(object):

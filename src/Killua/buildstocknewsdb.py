@@ -35,28 +35,31 @@ class GenStockNewsDB(object):
         # 创建stock_code为名称的collection
         stock_symbol_list = self.database.get_data("stock", "basic_info", keys=["symbol"])["symbol"].to_list()
         for symbol in stock_symbol_list:
-            _collection = self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, symbol)
-            _tmp_num_stat = 0
-            for row in self.database.get_collection(database_name, collection_name).find():  # 迭代器
-                if symbol[2:] in row["RelatedStockCodes"].split(" "):
-                    # 返回新闻发布后n天的标签
-                    _tmp_dict = {}
-                    for label_days, key_name in self.label_range.items():
-                        _tmp_res = self._label_news(
-                            datetime.datetime.strptime(row["Date"].split(" ")[0], "%Y-%m-%d"), symbol, label_days)
-                        if _tmp_res:
-                            _tmp_dict.update({key_name: _tmp_res})
-                    _data = {"Date": row["Date"],
-                             "Url": row["Url"],
-                             "Title": row["Title"],
-                             "Article": row["Article"],
-                             "OriDB": database_name,
-                             "OriCOL": collection_name}
-                    _data.update(_tmp_dict)
-                    _collection.insert_one(_data)
-                    _tmp_num_stat += 1
-            logging.info("there are {} news mentioned {} in {} collection ... "
-                         .format(_tmp_num_stat, symbol, collection_name))
+            if symbol > "sz000590":
+                _collection = self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, symbol)
+                _tmp_num_stat = 0
+                for row in self.database.get_collection(database_name, collection_name).find():  # 迭代器
+                    if symbol[2:] in row["RelatedStockCodes"].split(" "):
+                        # 返回新闻发布后n天的标签
+                        _tmp_dict = {}
+                        for label_days, key_name in self.label_range.items():
+                            _tmp_res = self._label_news(
+                                datetime.datetime.strptime(row["Date"].split(" ")[0], "%Y-%m-%d"), symbol, label_days)
+                            if _tmp_res:
+                                _tmp_dict.update({key_name: _tmp_res})
+                        _data = {"Date": row["Date"],
+                                 "Url": row["Url"],
+                                 "Title": row["Title"],
+                                 "Article": row["Article"],
+                                 "OriDB": database_name,
+                                 "OriCOL": collection_name}
+                        _data.update(_tmp_dict)
+                        _collection.insert_one(_data)
+                        _tmp_num_stat += 1
+                logging.info("there are {} news mentioned {} in {} collection ... "
+                             .format(_tmp_num_stat, symbol, collection_name))
+            else:
+                logging.info("{} is abandoned ...".format(symbol))
 
     def _label_news(self, date, symbol, n_days):
         """
