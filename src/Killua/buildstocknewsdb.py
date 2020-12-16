@@ -34,8 +34,9 @@ class GenStockNewsDB(object):
             tokenization.update_news_database_rows(database_name, collection_name)
         # 创建stock_code为名称的collection
         stock_symbol_list = self.database.get_data("stock", "basic_info", keys=["symbol"])["symbol"].to_list()
+        col_names = self.database.connect_database("stocknews").list_collection_names(session=None)
         for symbol in stock_symbol_list:
-            if symbol > "sz000590":
+            if symbol not in col_names:
                 _collection = self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, symbol)
                 _tmp_num_stat = 0
                 for row in self.database.get_collection(database_name, collection_name).find():  # 迭代器
@@ -56,10 +57,10 @@ class GenStockNewsDB(object):
                         _data.update(_tmp_dict)
                         _collection.insert_one(_data)
                         _tmp_num_stat += 1
-                logging.info("there are {} news mentioned {} in {} collection ... "
+                logging.info("there are {} news mentioned {} in {} collection need to be fetched ... "
                              .format(_tmp_num_stat, symbol, collection_name))
             else:
-                logging.info("{} is abandoned ...".format(symbol))
+                logging.info("{} has fetched all related news from {}...".format(symbol, collection_name))
 
     def _label_news(self, date, symbol, n_days):
         """

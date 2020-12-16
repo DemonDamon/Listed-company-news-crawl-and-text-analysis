@@ -9,11 +9,11 @@ class Database(object):
 		self.port = port
 		self.conn = MongoClient(self.ip, self.port)
 
-	def _connect_database(self, database_name):
+	def connect_database(self, database_name):
 		return self.conn[database_name]
 
 	def get_collection(self, database_name, collection_name):
-		return self._connect_database(database_name).get_collection(collection_name)
+		return self.connect_database(database_name).get_collection(collection_name)
 
 	def insert_data(self, database_name, collection_name, data_dict):
 		database = self.conn[database_name]
