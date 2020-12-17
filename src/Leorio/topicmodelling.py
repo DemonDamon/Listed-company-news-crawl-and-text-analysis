@@ -21,7 +21,9 @@ class TopicModelling(object):
                                          user_dict=config.USER_DEFINED_DICT_PATH,
                                          chn_stop_words_dir=config.CHN_STOP_WORDS_PATH)
 
-    def create_dictionary(self, raw_documents_list, save_path=None):
+    def create_dictionary(self,
+                          raw_documents_list,
+                          save_path=None):
         """
         将文中每个词汇关联唯一的ID，因此需要定义词汇表
         :param: raw_documents_list, 原始语料列表，每个元素即文本，如["洗尽铅华...", "风雨赶路人...", ...]
@@ -46,9 +48,13 @@ class TopicModelling(object):
         _dict.compactify()
         if save_path:
             _dict.save(save_path)
+
         return _dict, documents_token_list
 
-    def renew_dictionary(self, old_dict_path, new_raw_documents_list, new_dict_path=None):
+    def renew_dictionary(self,
+                         old_dict_path,
+                         new_raw_documents_list,
+                         new_dict_path=None):
         documents_token_list = []
         for doc in new_raw_documents_list:
             documents_token_list.append(self.tokenization.cut_words(doc))
@@ -58,6 +64,7 @@ class TopicModelling(object):
             old_dict_path = new_dict_path
         _dict.save(old_dict_path)
         logging.info("updated dictionary by another raw documents, and serialized in {} ... ".format(old_dict_path))
+
         return _dict, documents_token_list
 
     def create_bag_of_word_representation(self,
@@ -78,9 +85,14 @@ class TopicModelling(object):
         bow_vector = [corpora_dictionary.doc2bow(doc_token) for doc_token in documents_token_list]
         if bow_vector_save_path:
             corpora.MmCorpus.serialize(bow_vector_save_path, bow_vector)
+
         return documents_token_list, corpora_dictionary, bow_vector
 
-    def transform_vectorized_corpus(self, corpora_dictionary, bow_vector, model_type="lda", model_save_path=None):
+    @staticmethod
+    def transform_vectorized_corpus(corpora_dictionary,
+                                    bow_vector,
+                                    model_type="lda",
+                                    model_save_path=None):
         # 如何没有保存任何模型，重新训练的情况下，可以选择该函数
         model_vector = None
         if model_type == "lsi":
@@ -105,6 +117,7 @@ class TopicModelling(object):
             model_vector = model[bow_vector]  # 将整个语料进行转换
             if model_save_path:
                 model.save(model_save_path)
+
         return model_vector
 
     def add_unseen_documents_to_serialized_model(self,
@@ -138,11 +151,11 @@ class TopicModelling(object):
             loaded_model = models.LdaModel.load(old_model_path)
             loaded_model.update(bow_vec)  # 注意lda和lsi的模型在线更新函数不一样
             model_vector = loaded_model[bow_vec]
-
         if latest_model_path:
             old_model_path = latest_model_path
         assert loaded_model and model_vector is not None
         loaded_model.save(old_model_path)
+
         return model_vector
 
     # def load_transform_model(self, model_path):
@@ -170,10 +183,22 @@ if __name__ == "__main__":
     le = preprocessing.LabelEncoder()
     Y = le.fit_transform(Y)
 
-    _, corpora_dictionary, corpus = topicmodelling.create_bag_of_word_representation(raw_documents_list)
+    ori_dict_path = "sz000001_docs_dict.dict"
+    if os.path.exists(ori_dict_path):
+        # 如果原先存在词典
+        _, corpora_dictionary, corpus = topicmodelling.create_bag_of_word_representation(raw_documents_list,
+                                                                                         old_dict_path=ori_dict_path)
+    else:
+        # 如果原先不存在序列化词典
+        _, corpora_dictionary, corpus = topicmodelling.create_bag_of_word_representation(raw_documents_list,
+                                                                                         new_dict_path=ori_dict_path)
+
+    ori_model_path = "sz000001_model.lsi"
     model_vector = topicmodelling.transform_vectorized_corpus(corpora_dictionary,
                                                               corpus,
-                                                              model_type="lsi")
+                                                              model_type="lsi",
+                                                              model_save_path=None)
+    # TODO
     csr_matrix = utils.convert_to_csr_matrix(model_vector)
     train_x, train_y, test_x, test_y = utils.generate_training_set(csr_matrix, Y)
     classifier = Classifier()
