@@ -73,7 +73,7 @@ class TopicModelling(object):
                                           new_dict_path=None,
                                           bow_vector_save_path=None):
         if old_dict_path:
-            # 如果存在旧的语料词典，就在原先词典的基础上更新，增加未有的词
+            # 如果存在旧的语料词典，就在原先词典的基础上更新，增加未见过的词
             corpora_dictionary, documents_token_list = self.renew_dictionary(old_dict_path,
                                                                              raw_documents_list,
                                                                              new_dict_path=new_dict_path)
@@ -98,7 +98,9 @@ class TopicModelling(object):
         if model_type == "lsi":
             # LSI(Latent Semantic Indexing)模型，将文本从词袋向量或者词频向量(更好)，转为一个低维度的latent空间
             # 对于现实语料，目标维度在200-500被认为是"黄金标准"
-            tfidf_vector = models.TfidfModel(bow_vector)[bow_vector]
+            model_tfidf = models.TfidfModel(bow_vector)
+            # model_tfidf.save("model_tfidf.tfidf")
+            tfidf_vector = model_tfidf[bow_vector]
             model = models.LsiModel(tfidf_vector,
                                     id2word=corpora_dictionary,
                                     num_topics=config.TOPIC_NUMBER)  # 初始化模型
@@ -114,6 +116,7 @@ class TopicModelling(object):
                 model.save(model_save_path)
         elif model_type == "tfidf":
             model = models.TfidfModel(bow_vector)  # 初始化
+            # model = models.TfidfModel.load("model_tfidf.tfidf")
             model_vector = model[bow_vector]  # 将整个语料进行转换
             if model_save_path:
                 model.save(model_save_path)
@@ -133,7 +136,7 @@ class TopicModelling(object):
         # 加载已有的模型，Gensim提供在线学习的模式，不断基于新的documents训练新的模型
         if not os.path.exists(old_model_path):
             raise Exception("the file path {} does not exist ... ".format(old_model_path))
-        # 根据新的文档或者语料更新原有的词典(没有则构造新词典)
+        # 根据新的文档或者语料更新原有的词典(没有则构造新词典)，此时的bow_vec是根据新的词典计算
         _, corpora_dictionary, bow_vec = self.create_bag_of_word_representation(another_raw_documents_list,
                                                                                 old_dict_path=old_dict_path,
                                                                                 new_dict_path=new_dict_path,
@@ -158,13 +161,14 @@ class TopicModelling(object):
 
         return model_vector
 
-    # def load_transform_model(self, model_path):
-    #     if ".tfidf" in model_path:
-    #         return models.TfidfModel.load(model_path)
-    #     elif ".lsi" in model_path:
-    #         return models.LsiModel.load(model_path)
-    #     elif ".lda" in model_path:
-    #         return models.LdaModel.load(model_path)
+    @staticmethod
+    def load_transform_model(model_path):
+        if ".tfidf" in model_path:
+            return models.TfidfModel.load(model_path)
+        elif ".lsi" in model_path:
+            return models.LsiModel.load(model_path)
+        elif ".lda" in model_path:
+            return models.LdaModel.load(model_path)
 
 
 if __name__ == "__main__":
@@ -173,36 +177,125 @@ if __name__ == "__main__":
     from sklearn import preprocessing
 
     database = Database()
+    logging.info("initialize database object ... ")
+
     topicmodelling = TopicModelling()
+    logging.info("create topic modeling object ... ")
+
+    label_name = "60DaysLabel"
+    database_name = "stocknews"
+    collection_name = "sh600004"  # sz000001
+    classifier_save_path = "{}_classifier.pkl".format(collection_name)
+    bowvec_save_path = "{}_bowvec.mm".format(collection_name)
+
     raw_documents_list = []
     Y = []
-    for row in database.get_collection("stocknews", "sz000001").find():
-        if "60DaysLabel" in row.keys():
+    for row in database.get_collection(database_name, collection_name).find():
+        if label_name in row.keys():
             raw_documents_list.append(row["Article"])
-            Y.append(row["60DaysLabel"])
+            Y.append(row[label_name])
+    logging.info("fetch {} data from database -> {} collection -> {} ... "
+                 .format(label_name, database_name, collection_name))
+
     le = preprocessing.LabelEncoder()
     Y = le.fit_transform(Y)
+    label_name_list = le.classes_  # ['中性' '利好' '利空'] -> [0, 1, 2]
+    logging.info("encode label by sklearn preprocessing for training ... ")
 
-    ori_dict_path = "sz000001_docs_dict.dict"
+    ori_dict_path = "{}_docs_dict.dict".format(collection_name)
     if os.path.exists(ori_dict_path):
-        # 如果原先存在词典
-        _, corpora_dictionary, corpus = topicmodelling.create_bag_of_word_representation(raw_documents_list,
-                                                                                         old_dict_path=ori_dict_path)
+        # 如果原先存在词典和词袋向量，则加载进内存
+        corpora_dictionary = corpora.Dictionary.load(ori_dict_path)
+        corpus = corpora.MmCorpus(bowvec_save_path)
+        # _, corpora_dictionary, corpus = topicmodelling.create_bag_of_word_representation(raw_documents_list,
+        #                                                                                  old_dict_path=ori_dict_path,
+        #                                                                                  bow_vector_save_path=bowvec_save_path)
+        logging.info("load existed dictionary in path -> {}".format(ori_dict_path))
+        logging.info("load existed bow-vector in path -> {}".format(bowvec_save_path))
     else:
-        # 如果原先不存在序列化词典
+        # 如果原先不存在序列化词典，则根据历史新闻数据库创建词典，以及计算每个历史新闻的词袋向量
         _, corpora_dictionary, corpus = topicmodelling.create_bag_of_word_representation(raw_documents_list,
-                                                                                         new_dict_path=ori_dict_path)
+                                                                                         new_dict_path=ori_dict_path,
+                                                                                         bow_vector_save_path=bowvec_save_path)
+        logging.info("create dictionary and save in path -> {} ... ".format(ori_dict_path))
+        logging.info("create bow-vector and save in path -> {} ... ".format(bowvec_save_path))
 
-    ori_model_path = "sz000001_model.lsi"
-    model_vector = topicmodelling.transform_vectorized_corpus(corpora_dictionary,
-                                                              corpus,
-                                                              model_type="lsi",
-                                                              model_save_path=None)
-    # TODO
-    csr_matrix = utils.convert_to_csr_matrix(model_vector)
-    train_x, train_y, test_x, test_y = utils.generate_training_set(csr_matrix, Y)
+    ori_model_path = "{}_model.lsi".format(collection_name)
+    if not os.path.exists(ori_model_path):
+        # 如果该股票没有保存话题模型，则根据词典以及词袋向量重新构建话题模型，并返回模型向量
+        model_vector = topicmodelling.transform_vectorized_corpus(corpora_dictionary,
+                                                                  corpus,
+                                                                  model_type="lsi",
+                                                                  model_save_path=ori_model_path)
+        logging.info("build topic model and serialized model in path -> {} ... ".format(ori_model_path))
+    else:
+        # 如果存在该支股票的话题模型，则加载模型；然后根据每条历史新闻的词袋向量，计算对应的话题模型向量
+        loaded_model = topicmodelling.load_transform_model(ori_model_path)
+        model_vector = loaded_model[corpus]
+
+    # 利用历史数据的话题模型向量(或特征)，进一步训练新闻分类器
     classifier = Classifier()
-    classifier.svm(train_x, train_y, test_x, test_y)
+    if not os.path.exists(classifier_save_path):
+        # 如果不存在该训练器
+        csr_matrix = utils.convert_to_csr_matrix(model_vector)
+        print(csr_matrix.shape)  # (29, 29)
+        train_x, train_y, test_x, test_y = utils.generate_training_set(csr_matrix, Y)
+        clf = classifier.svm(train_x, train_y, test_x, test_y, svm_save_path=classifier_save_path)
+    else:
+        # 如果分类模型存在则加载进内存
+        clf = classifier.model_load(classifier_save_path)
+
+    # -------------------- 样本外测试 --------------------
+    # 对(未见过的)新闻进行分类
+    unseen_raw_documents_list = ["本案的当事人孙某，现年57岁，家住辽宁大连。自2014年起，孙某就开始在平\
+                                  安银行(18.830, -0.12, -0.63%)大连分行（以下简称“平安银行”）购买金\
+                                  融理财产品。证据显示，早在2014年1月16日，经过平安银行的风险测评，孙某\
+                                  被评估为平衡型的投资者，风险评估报告由孙某和平安银行的理财经理共同签字\
+                                  。之后，孙某一直通过理财经理购买风险评级低、年化收益率也较低的理财产品。",
+                                 "关于公司向平安银行(18.850, -0.10, -0.53%)申请1亿元综合授信额度的议案。\
+                                 同意公司向平安银行股份有限公司乌鲁木齐分行申请综合授信额度人民币1亿元，期\
+                                 限一年，本次授信由新疆天富集团有限责任公司提供连带责任保证担保。",
+                                 "平安银行(18.850, -0.10, -0.53%)荣获第十八届财经风云榜“2020年度金融科技\
+                                 创新奖” 来源：和讯银行12月16日，由和讯网主办的2020年财经中国年会暨第十八\
+                                 届财经风云榜银行峰会在京召开，会上重磅揭晓第十八届中国财经风云榜之银行业评\
+                                 选结果。科技赋能服务创新，平安银行获评“2020年度金融科技创新奖”。"]
+    # 加载该股票历史数据新闻词典，以及历史新闻的bow向量集
+    historical_corpora_dictionary = corpora.Dictionary.load(ori_dict_path)
+    historical_bow_vec = corpora.MmCorpus(bowvec_save_path)
+    logging.info("load historical dictionary in path -> {}".format(ori_dict_path))
+    logging.info("load historical bow-vector in path -> {}".format(bowvec_save_path))
+    updated_dictionary_with_old_and_unseen_news, unssen_documents_token_list = topicmodelling.renew_dictionary(ori_dict_path,
+                                                                                                               unseen_raw_documents_list)
+    unseen_bow_vector = [updated_dictionary_with_old_and_unseen_news.doc2bow(doc_token) for doc_token in unssen_documents_token_list]
+    updated_bow_vector_with_old_and_unseen_news = []
+    updated_bow_vector_with_old_and_unseen_news.extend(historical_bow_vec)
+    updated_bow_vector_with_old_and_unseen_news.extend(unseen_bow_vector)
+    corpora.MmCorpus.serialize(bowvec_save_path, updated_bow_vector_with_old_and_unseen_news)  # 保存更新后的bow向量，即包括新旧新闻的bow向量集
+
+    updated_tfidf_model_vector = topicmodelling.transform_vectorized_corpus(updated_dictionary_with_old_and_unseen_news,
+                                                                            updated_bow_vector_with_old_and_unseen_news,
+                                                                            model_type="tfidf")
+
+    model = models.LsiModel(updated_tfidf_model_vector,
+                            id2word=updated_dictionary_with_old_and_unseen_news,
+                            num_topics=config.TOPIC_NUMBER)  # 初始化模型
+    model_lsi_vector = model[updated_tfidf_model_vector]
+
+    # loaded_model = models.LsiModel.load(ori_model_path)
+    # loaded_model.add_documents(unseen_csr_matrix[-len(unseen_raw_documents_list):, :])
+    # loaded_model.add_documents(updated_tfidf_model_vector[-len(unseen_raw_documents_list):])
+    # unseen_model_vector = topicmodelling.add_unseen_documents_to_serialized_model(ori_model_path,
+    #                                                                               unseen_raw_documents_list,
+    #                                                                               model_type="lsi",
+    #                                                                               old_dict_path=ori_dict_path)
+
+    unseen_csr_matrix = utils.convert_to_csr_matrix(model_lsi_vector)
+    print(unseen_csr_matrix.shape)
+    print(unseen_csr_matrix[-1, :].shape)
+    print(clf.predict(unseen_csr_matrix[-1, :].reshape(-1, 1)))
+    print(clf.predict(unseen_csr_matrix[-2, :]))
+    print(clf.predict(unseen_csr_matrix[-3, :]))
+
 
     # lsi Tue, 15 Dec 2020 14:54:08 classifier.py[line:54] INFO train_pred: 0.9829  test_pred: 0.703 (只是去掉停用词、tab符以及空格符) 30DaysLabel
     # lsi Tue, 15 Dec 2020 17:00:58 classifier.py[line:54] INFO train_pred: 0.9852  test_pred: 0.7492(去掉不含中文的词以及只有一个字符的词) 30DaysLabel

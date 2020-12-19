@@ -9,15 +9,18 @@
         <list>
           <option value="W391" />
           <option value="E265" />
+          <option value="E501" />
         </list>
       </option>
     </inspection_tool>
     <inspection_tool class="PyShadowingNamesInspection" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyUnboundLocalVariableInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredIdentifiers">
         <list>
           <option value="object.add_documents" />
           <option value="object.save" />
+          <option value="object.doc2bow" />
         </list>
       </option>
     </inspection_tool>

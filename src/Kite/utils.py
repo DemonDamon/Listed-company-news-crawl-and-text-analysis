@@ -113,14 +113,14 @@ def convert_to_csr_matrix(model_vector):
     rows = []
     cols = []
     _line_count = 0
-    for line in model_vector:
-        for elem in line:
+    for line in model_vector:  # line=[(int, float), (int, float), ...]
+        for elem in line:  # elem=(int, float)
             rows.append(_line_count)
             cols.append(elem[0])
             data.append(elem[1])
         _line_count += 1
     sparse_matrix = csr_matrix((data, (rows, cols)))
-    matrix = sparse_matrix.toarray()
+    matrix = sparse_matrix.toarray()  # <class 'numpy.ndarray'>
 
     return matrix
 
