@@ -21,6 +21,8 @@
           <option value="object.add_documents" />
           <option value="object.save" />
           <option value="object.doc2bow" />
+          <option value="Cython.Includes.numpy.ndarray.T" />
+          <option value="list.obj" />
         </list>
       </option>
     </inspection_tool>
