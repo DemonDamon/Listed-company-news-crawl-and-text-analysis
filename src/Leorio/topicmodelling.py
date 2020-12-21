@@ -206,8 +206,7 @@ class TopicModelling(object):
         logging.info("create bow-vector and save in path -> {} ... ".format(bowvec_save_path))
 
         updated_dictionary_with_old_and_unseen_news, unssen_documents_token_list \
-            = self.renew_dictionary(ori_dict_path,
-                                              [unseen_raw_document])
+            = self.renew_dictionary(ori_dict_path, [unseen_raw_document])
 
         unseen_bow_vector = [updated_dictionary_with_old_and_unseen_news.doc2bow(doc_token) for doc_token in
                              unssen_documents_token_list]
