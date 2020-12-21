@@ -30,7 +30,8 @@ class TopicModelling(object):
 
     def create_dictionary(self,
                           raw_documents_list,
-                          save_path=None):
+                          save_path=None,
+                          is_saved=False):
         """
         将文中每个词汇关联唯一的ID，因此需要定义词汇表
         :param: raw_documents_list, 原始语料列表，每个元素即文本，如["洗尽铅华...", "风雨赶路人...", ...]
@@ -53,7 +54,7 @@ class TopicModelling(object):
         _dict.filter_tokens(once_ids)
         # 消除id序列在删除词后产生的不连续的缺口
         _dict.compactify()
-        if save_path:
+        if is_saved and save_path:
             _dict.save(save_path)
             logging.info("new generated dictionary saved in path -> {} ...".format(ori_dict_path))
 
@@ -62,7 +63,8 @@ class TopicModelling(object):
     def renew_dictionary(self,
                          old_dict_path,
                          new_raw_documents_list,
-                         new_dict_path=None):
+                         new_dict_path=None,
+                         is_saved=False):
         documents_token_list = []
         for doc in new_raw_documents_list:
             documents_token_list.append(self.tokenization.cut_words(doc))
@@ -70,8 +72,9 @@ class TopicModelling(object):
         _dict.add_documents(documents_token_list)
         if new_dict_path:
             old_dict_path = new_dict_path
-        _dict.save(old_dict_path)
-        logging.info("updated dictionary by another raw documents, and serialized in {} ... ".format(old_dict_path))
+        if is_saved:
+            _dict.save(old_dict_path)
+            logging.info("updated dictionary by another raw documents serialized in {} ... ".format(old_dict_path))
 
         return _dict, documents_token_list
 
@@ -79,7 +82,8 @@ class TopicModelling(object):
                                           raw_documents_list,
                                           old_dict_path=None,
                                           new_dict_path=None,
-                                          bow_vector_save_path=None):
+                                          bow_vector_save_path=None,
+                                          is_saved_dict=False):
         if old_dict_path:
             # 如果存在旧的语料词典，就在原先词典的基础上更新，增加未见过的词
             corpora_dictionary, documents_token_list = self.renew_dictionary(old_dict_path,
@@ -88,7 +92,8 @@ class TopicModelling(object):
         else:
             # 否则重新创建词典
             corpora_dictionary, documents_token_list = self.create_dictionary(raw_documents_list,
-                                                                              save_path=new_dict_path)
+                                                                              save_path=new_dict_path,
+                                                                              is_saved=is_saved_dict)
         # 根据新词典对文档(或语料)生成对应的词袋向量
         bow_vector = [corpora_dictionary.doc2bow(doc_token) for doc_token in documents_token_list]
         if bow_vector_save_path:
@@ -184,7 +189,8 @@ class TopicModelling(object):
                                        collection_name,
                                        label_name="60DaysLabel",
                                        ori_dict_path=None,
-                                       bowvec_save_path=None):
+                                       bowvec_save_path=None,
+                                       is_saved_bow_vector=False):
         historical_raw_documents_list = []
         Y = []
         for row in self.database.get_collection(database_name, collection_name).find():
@@ -199,14 +205,16 @@ class TopicModelling(object):
         logging.info("encode historical label list by sklearn preprocessing for training ... ")
         label_name_list = le.classes_  # ['中性' '利好' '利空'] -> [0, 1, 2]
 
-        # 如果原先不存在序列化词典，则根据历史新闻数据库创建词典，以及计算每个历史新闻的词袋向量
+        # 根据历史新闻数据库创建词典，以及计算每个历史新闻的词袋向量
         _, _, historical_bow_vec = self.create_bag_of_word_representation(historical_raw_documents_list,
                                                                           new_dict_path=ori_dict_path,
-                                                                          bow_vector_save_path=bowvec_save_path)
-        logging.info("create bow-vector and save in path -> {} ... ".format(bowvec_save_path))
+                                                                          is_saved_dict=True)
+        logging.info("create dictionary of historical news, and serialized in path -> {} ... ".format(ori_dict_path))
 
         updated_dictionary_with_old_and_unseen_news, unssen_documents_token_list \
             = self.renew_dictionary(ori_dict_path, [unseen_raw_document])
+
+        os.remove(ori_dict_path)  # 删除掉该字典
 
         unseen_bow_vector = [updated_dictionary_with_old_and_unseen_news.doc2bow(doc_token) for doc_token in
                              unssen_documents_token_list]
@@ -214,10 +222,10 @@ class TopicModelling(object):
         updated_bow_vector_with_old_and_unseen_news.extend(historical_bow_vec)
         updated_bow_vector_with_old_and_unseen_news.extend(unseen_bow_vector)
         # 原先updated_bow_vector_with_old_and_unseen_news是list类型，但是经过下面序列化后重新加载进来的类型是gensim.corpora.mmcorpus.MmCorpus
-        corpora.MmCorpus.serialize(bowvec_save_path,
-                                   updated_bow_vector_with_old_and_unseen_news)  # 保存更新后的bow向量，即包括新旧新闻的bow向量集
-        logging.info("combined bow vector(type -> 'list') generated by historical news with unseen bow vector to create a new one , "
-                     "and serialized in path -> {} ... ".format(bowvec_save_path))
+        if is_saved_bow_vector and bowvec_save_path:
+            corpora.MmCorpus.serialize(bowvec_save_path,
+                                       updated_bow_vector_with_old_and_unseen_news)  # 保存更新后的bow向量，即包括新旧新闻的bow向量集
+        logging.info("combined bow vector(type -> 'list') generated by historical news with unseen bow vector to create a new one ... ")
 
         updated_tfidf_model_vector = self.transform_vectorized_corpus(updated_dictionary_with_old_and_unseen_news,
                                                                       updated_bow_vector_with_old_and_unseen_news,
