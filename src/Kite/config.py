@@ -34,6 +34,9 @@ ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE = "stocknews"
 
 TOPIC_NUMBER = 200
 SMV_TUNED_PARAMTERS = {"kernel": ["rbf"], "gamma": [10, 20, 50, 100, 150, 200], "C": [10, 15, 20, 30, 50, 100]}
-SMV_SCORE_LIST = ["precision"]
+RDFOREST_TUNED_PARAMTERS = {'n_estimators': [1, 2, 3, 4, 5, 10],
+                            'criterion': ['gini', 'entropy'],
+                            'max_features': ['auto', 'sqrt']}
+CLASSIFIER_SCORE_LIST = ["f1_weighted"]
 USER_DEFINED_DICT_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Leorio\\financedict.txt"
 CHN_STOP_WORDS_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Leorio\\chnstopwords.txt"
