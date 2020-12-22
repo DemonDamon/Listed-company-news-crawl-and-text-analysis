@@ -1,5 +1,6 @@
 import __init__
 import os
+import time
 
 from Kite import config
 from Kite import utils
@@ -136,59 +137,12 @@ class TopicModelling(object):
 
         return model_vector
 
-    def add_unseen_documents_to_serialized_model(self,
-                                                 old_model_path,
-                                                 another_raw_documents_list,
-                                                 latest_model_path=None,
-                                                 model_type="lsi",
-                                                 old_dict_path=None,
-                                                 new_dict_path=None,
-                                                 corpus_save_path=None):
-        loaded_model = None
-        model_vector = None
-        # 加载已有的模型，Gensim提供在线学习的模式，不断基于新的documents训练新的模型
-        if not os.path.exists(old_model_path):
-            raise Exception("the file path {} does not exist ... ".format(old_model_path))
-        # 根据新的文档或者语料更新原有的词典(没有则构造新词典)，此时的bow_vec是根据新的词典计算
-        _, corpora_dictionary, bow_vec = self.create_bag_of_word_representation(another_raw_documents_list,
-                                                                                old_dict_path=old_dict_path,
-                                                                                new_dict_path=new_dict_path,
-                                                                                bow_vector_save_path=corpus_save_path)
-        # 加载历史模型
-        assert model_type in ["lsi", "lda"]
-        if model_type == "lsi":
-            loaded_model = models.LsiModel.load(old_model_path)
-            another_tfidf_model_vector = self.transform_vectorized_corpus(corpora_dictionary,
-                                                                          bow_vec,
-                                                                          model_type="tfidf")
-            loaded_model.add_documents(another_tfidf_model_vector)
-            model_vector = loaded_model[another_tfidf_model_vector]
-        elif model_type == "lda":
-            loaded_model = models.LdaModel.load(old_model_path)
-            loaded_model.update(bow_vec)  # 注意lda和lsi的模型在线更新函数不一样
-            model_vector = loaded_model[bow_vec]
-        if latest_model_path:
-            old_model_path = latest_model_path
-        assert loaded_model and model_vector is not None
-        loaded_model.save(old_model_path)
-
-        return model_vector
-
-    @staticmethod
-    def load_transform_model(model_path):
-        if ".tfidf" in model_path:
-            return models.TfidfModel.load(model_path)
-        elif ".lsi" in model_path:
-            return models.LsiModel.load(model_path)
-        elif ".lda" in model_path:
-            return models.LdaModel.load(model_path)
-
     def classify_stock_news(self,
                             unseen_raw_document,
                             database_name,
                             collection_name,
                             label_name="60DaysLabel",
-                            topic_model_type="lsi",
+                            topic_model_type="lda",
                             classifier_model="svm",
                             ori_dict_path=None,
                             bowvec_save_path=None,
@@ -208,13 +162,19 @@ class TopicModelling(object):
         label_name_list = le.classes_  # ['中性' '利好' '利空'] -> [0, 1, 2]
 
         # 根据历史新闻数据库创建词典，以及计算每个历史新闻的词袋向量
+        start_time = time.time()
         _, _, historical_bow_vec = self.create_bag_of_word_representation(historical_raw_documents_list,
                                                                           new_dict_path=ori_dict_path,
                                                                           is_saved_dict=True)
-        logging.info("create dictionary of historical news, and serialized in path -> {} ... ".format(ori_dict_path))
+        end_time = time.time()
+        logging.info("create dictionary of historical news, and serialized in path -> {}, which took {} \
+                      secs ... ".format(ori_dict_path, (end_time-start_time)/60))
 
-        updated_dictionary_with_old_and_unseen_news, unssen_documents_token_list \
-            = self.renew_dictionary(ori_dict_path, [unseen_raw_document])
+        start_time = time.time()
+        updated_dictionary_with_old_and_unseen_news, unssen_documents_token_list = self.renew_dictionary(ori_dict_path,
+                                                                                                         [unseen_raw_document])
+        end_time = time.time()
+        logging.info("renew dictionary took {} secs ... ".format((end_time - start_time) / 60))
 
         os.remove(ori_dict_path)  # 删除掉该字典
 
@@ -223,39 +183,54 @@ class TopicModelling(object):
         updated_bow_vector_with_old_and_unseen_news = []
         updated_bow_vector_with_old_and_unseen_news.extend(historical_bow_vec)
         updated_bow_vector_with_old_and_unseen_news.extend(unseen_bow_vector)
-        # 原先updated_bow_vector_with_old_and_unseen_news是list类型，但是经过下面序列化后重新加载进来的类型是gensim.corpora.mmcorpus.MmCorpus
+        # 原先updated_bow_vector_with_old_and_unseen_news是list类型，
+        # 但是经过下面序列化后重新加载进来的类型是gensim.corpora.mmcorpus.MmCorpus
         if is_saved_bow_vector and bowvec_save_path:
             corpora.MmCorpus.serialize(bowvec_save_path,
                                        updated_bow_vector_with_old_and_unseen_news)  # 保存更新后的bow向量，即包括新旧新闻的bow向量集
         logging.info("combined bow vector(type -> 'list') generated by historical news with unseen bow vector to create a new one ... ")
 
         if topic_model_type == "lsi":
+            start_time = time.time()
             updated_tfidf_model_vector = self.transform_vectorized_corpus(updated_dictionary_with_old_and_unseen_news,
                                                                           updated_bow_vector_with_old_and_unseen_news,
                                                                           model_type="tfidf")  # type -> <gensim.interfaces.TransformedCorpus object>
-            logging.info("regenerated TF-IDF model vector by updated dictionary and updated bow-vector ... ")
+            end_time = time.time()
+            logging.info("regenerated TF-IDF model vector by updated dictionary and updated bow-vector, which took {} \
+                          secs ... ".format((end_time-start_time)/60))
 
+            start_time = time.time()
             model = models.LsiModel(updated_tfidf_model_vector,
                                     id2word=updated_dictionary_with_old_and_unseen_news,
                                     num_topics=config.TOPIC_NUMBER)  # 初始化模型
             model_vector = model[updated_tfidf_model_vector]  # type -> <gensim.interfaces.TransformedCorpus object>
-            logging.info("regenerated LSI model vector space by updated TF-IDF model vector space ... ")
+            end_time = time.time()
+            logging.info("regenerated LSI model vector space by updated TF-IDF model vector space, which took {} \
+                          secs ... ".format((end_time-start_time)/60))
         elif topic_model_type == "lda":
+            start_time = time.time()
             model_vector = self.transform_vectorized_corpus(updated_dictionary_with_old_and_unseen_news,
                                                             updated_bow_vector_with_old_and_unseen_news,
                                                             model_type="lda")
-            logging.info("regenerated LDA model vector space by updated dictionary and bow-vector ... ")
+            end_time = time.time()
+            logging.info("regenerated LDA model vector space by updated dictionary and bow-vector, which took {} \
+                          secs ... ".format((end_time-start_time)/60))
 
         # 将gensim.interfaces.TransformedCorpus类型的lsi模型向量转为numpy矩阵
+        start_time = time.time()
         latest_matrix = corpus2dense(model_vector,
                                      num_terms=model_vector.obj.num_terms).T
-        logging.info("transform {} model vector space to numpy.adarray ... ".format(topic_model_type.upper()))
+        end_time = time.time()
+        logging.info("transform {} model vector space to numpy.adarray, which took {} secs ... ".format(topic_model_type.upper(),
+                                                                                                        (end_time-start_time)/60))
 
         # 利用历史数据的话题模型向量(或特征)，进一步训练新闻分类器
+        start_time = time.time()
         train_x, train_y, test_x, test_y = utils.generate_training_set(latest_matrix[:-1, :], Y)
         clf = self.classifier.train(train_x, train_y, test_x, test_y, model_type=classifier_model)
-        logging.info("finished training by sklearn {} using latest {} model vector space ... ".format(classifier_model.upper(),
-                                                                                                      topic_model_type.upper()))
+        end_time = time.time()
+        logging.info("finished training by sklearn {} using latest {} model vector space, which took {} sec ... "
+                     .format(classifier_model.upper(), topic_model_type.upper(), (end_time-start_time)/60))
 
         label_id = clf.predict(latest_matrix[-1, :].reshape(1, -1))[0]
 
@@ -263,27 +238,78 @@ class TopicModelling(object):
 
 
 if __name__ == "__main__":
-    label_name = "60DaysLabel"
+    label_name = "3DaysLabel"
     database_name = "stocknews"
     # sh600004的数据量比较少，可作为跑通代码流程的参数；sz000001的数据量比较大，处理起来也较慢，可以作为后续案例测试
-    collection_name = "sh600004"
+    collection_name = "sz000001"
     classifier_save_path = "{}_classifier.pkl".format(collection_name)
     ori_dict_path = "{}_docs_dict.dict".format(collection_name)
     bowvec_save_path = "{}_bowvec.mm".format(collection_name)
 
     # 对(未见过的)新闻进行分类
-    unseen_raw_documents_list = ["本案的当事人孙某，现年57岁，家住辽宁大连。自2014年起，孙某就开始在平\
-                                  安银行(18.830, -0.12, -0.63%)大连分行（以下简称“平安银行”）购买金\
-                                  融理财产品。证据显示，早在2014年1月16日，经过平安银行的风险测评，孙某\
-                                  被评估为平衡型的投资者，风险评估报告由孙某和平安银行的理财经理共同签字\
-                                  。之后，孙某一直通过理财经理购买风险评级低、年化收益率也较低的理财产品。",
-                                 "关于公司向平安银行(18.850, -0.10, -0.53%)申请1亿元综合授信额度的议案。\
-                                 同意公司向平安银行股份有限公司乌鲁木齐分行申请综合授信额度人民币1亿元，期\
-                                 限一年，本次授信由新疆天富集团有限责任公司提供连带责任保证担保。",
-                                 "平安银行(18.850, -0.10, -0.53%)荣获第十八届财经风云榜“2020年度金融科技\
-                                 创新奖” 来源：和讯银行12月16日，由和讯网主办的2020年财经中国年会暨第十八\
-                                 届财经风云榜银行峰会在京召开，会上重磅揭晓第十八届中国财经风云榜之银行业评\
-                                 选结果。科技赋能服务创新，平安银行获评“2020年度金融科技创新奖”。"]
+    # unseen_raw_documents_list = ["智通财经APP讯，白云机场(600004.SH)发布公告，公司2020年11月起降40278架次，\
+    #                               同比下降2.47%;旅客吞吐量约501.4万人次，同比下降19.31%;货邮吞吐量约17.32万\
+    #                               吨，同比下降1.27%。此外，公司2020年累计起降约33.2万架次，同比下降26.07%;旅\
+    #                               客吞吐量约3890.14万人次，同比下降42.00%;货邮吞吐量约158.12万吨，同比下降9.14%。",
+    #                              "格隆汇 9 月 1日丨白云机场(600004.SH)公布，公司收到中国证券监督管理委员会于2020\
+    #                               年8月20日出具的《中国证监会行政许可项目审查一次反馈意见通知书》(202137号)。根据\
+    #                               《反馈意见》的相关要求，白云机场控股股东广东省机场管理集团有限公司(“机场集团”)\
+    #                               于2020年8月31日出具了《广东省机场管理集团有限公司关于不存在减持广州白云国际机场股\
+    #                               份有限公司股票行为或减持计划的承诺函》，具体内容如下：鉴于机场集团拟以现金的方式参\
+    #                               与认购本次白云机场非公开发行的A股股票。机场集团现作出如下承诺：1、自白云机场本次发\
+    #                               行定价基准日(即2020年4月28日)前六个月至本承诺函出具之日，机场集团及机场集团控制的关\
+    #                               联方未出售或以任何方式减持白云机场的任何股票。2、自本承诺函出具之日起至白云机场本次发\
+    #                               行完成后六个月期间内，机场集团及机场集团控制的关联方将不会出售或以任何方式减持所持有的\
+    #                               白云机场的任何股票，也不存在减持白云机场股票的计划。3、机场集团及机场集团控制的关联方\
+    #                               不存在违反《中华人民共和国证券法》第四十四条的情形。如有违反，机场集团因减持股票所得收\
+    #                               益将归白云机场所有。4、本承诺函自签署之日起对机场集团具有约束力，若机场集团或机场集团\
+    #                               控制的关联方违反上述承诺发生减持情况，则减持所得全部收益归白云机场所有，机场集团依法\
+    #                               承担由此产生的法律责任。",
+    #                              "格隆汇11月27日丨白云机场(600004.SH)公布，为增强上市公司经营独立性、业务及资产完整性，\
+    #                              提升公司盈利能力与运行保障能力，扩展白云机场物流业务发展空间，同时减少关联交易，确保上\
+    #                              市公司利益最大化，公司拟实施如下交易：机场集团以所持有的航合公司100%的股权以及铂尔曼酒\
+    #                              店、澳斯特酒店相应的经营性资产及负债与上市公司所持有的物流公司51%的股权进行资产置换，差\
+    #                              额部分以现金补足。其中航合公司100%股权作价7.54亿元，铂尔曼酒店经营性资产及负债作价2.28\
+    #                              亿元，澳斯特酒店经营性资产及负债作价3950.01万元，物流公司51%股权作价8.57亿元，上市公司\
+    #                              需向机场集团以现金方式支付差额1.64亿元。本次交易完成后，公司将持有航合公司100%股权、铂\
+    #                              尔曼酒店和澳斯特酒店经营性资产及负债、物流公司49%股权；机场集团将持有物流公司51%股权。\
+    #                              本次交易除上述资产置换外，还包括：(1)上市公司与机场集团重新划分国内航空主业收入中旅客服\
+    #                              务费(以下简称“旅客服务费”)的分成比例，由上市公司占85%、机场集团占15%，变更为上市公司\
+    #                              占100%，机场集团不再享有旅客服务费分成，2018年15%旅客服务费对应金额为1.19亿元；及(2)上\
+    #                              市公司将按物流公司年营业收入的4%向物流公司收取经营权使用费。2018年，模拟计算物流公司营\
+    #                              业收入4%对应的经营权使用费为2536.07万元。本次资产置换交易完成后，上市公司2018年备考口径\
+    #                              净利润、归母净利润、净资产、归母净资产和每股收益都将增厚约5%，2018年备考每股收益将从\
+    #                              0.5457元每股增厚至0.5717元每股。为充分保障上市公司及中小股东利益，机场集团同意，自本次\
+    #                              资产置换交割之日起五年内，上市公司享有一次回购物流公司股权的权利，即上市公司有权要求机\
+    #                              场集团将本次交易取得的全部物流公司股权(对应同等金额的注册资本金额，包括在此基础上进行\
+    #                              配股、转增、折股等所取得的股权)按届时评估值转让给上市公司。因此，上市公司在本次资产置\
+    #                              换中拥有充分的主动权，可以选择重新取得物流公司的控制权。据悉，旅客服务费是公司主营航空\
+    #                              性业务收入的重要组成部分，对业务完整性具有重要意义。旅客服务费全部由上市公司享有后，将\
+    #                              较大幅度增加上市公司的收入、利润和现金流水平。受益于粤港澳大湾区规划及白云机场T2航站楼\
+    #                              启用，旅客吞吐量逐年提升。未来随着白云机场的T3航站楼及新跑道的建设推进，旅客吞吐量还将\
+    #                              进一步提升，15%旅客服务费对应收入将随之提升，并为公司贡献更多业绩增长空间。"]
+
+    unseen_raw_documents_list = ["格隆汇6月23日丨平安银行(000001.SZ)公布，近日收到《中国银保监会关于平安银行变更注册资本\
+                                 的批复》(银保监复〔2020〕342号)，中国银行保险监督管理委员会同意本行将注册资本由人民币\
+                                 17, 170, 411, 366元增加至19, 405, 918, 198元，并修改本行章程相应条款。",
+                                 "平安银行(000001,股吧)(000001.SZ)公布，公司于2020年8月19日收到《中国银保监会关于平安理\
+                                 财有限责任公司开业的批复》(银保监复〔2020〕513号)，中国银行保险监督管理委员会(简称“中\
+                                 国银保监会”)已批准公司全资子公司平安理财有限责任公司(简称“平安理财”)开业。根据中国银\
+                                 保监会批复，平安理财注册资本为50亿元人民币，注册地为深圳市，主要从事发行公募理财产品、\
+                                 发行私募理财产品、理财顾问和咨询等资产管理相关业务。　　近年来，公司以打造“中国最卓越\
+                                 、全球领先的智能化零售银行”为战略目标，坚持“科技引领、零售突破、对公做精”十二字策略\
+                                 方针，强化“综合金融”、“科技赋能”两大核心优势，打造数字化银行、生态银行、平台银行三\
+                                 张名片，推动发展迈向新台阶。在此基础上，稳步推进资产管理和理财业务转型，综合服务能力不\
+                                 断提升，规模、质量、效益实现协调发展。设立平安理财是本行严格落实监管要求、促进理财业务\
+                                 健康发展、推动理财业务回归本源的重要举措。平安理财将秉持“受人之托，代客理财”的服务宗\
+                                 旨，深耕理财市场，为客户提供更优质的资管产品和财富管理服务，助力实体经济高质量发展。下\
+                                 一步，公司将按照法律法规相关要求严格履行有关程序，推动平安理财尽快开业运营。",
+                                 "格隆汇5月26日丨平安银行(000001.SZ)公布，经中国银行保险监督管理委员会和中国人民银行批准\
+                                 ，公司于近日在全国银行间债券市场成功发行了总额为300亿元人民币的小型微型企业贷款专项金融\
+                                 债券。该期债券发行总规模为人民币300亿元，为3年期固定利率债券，票面利率为2.30%，募集资金\
+                                 将依据适用法律和监管部门的批准，专项用于发放小型微型企业贷款，其中部分将用于发放与新冠\
+                                 肺炎疫情防控相关的小微企业贷款，加大对小型微型企业信贷支持力度，推动小型微型企业业务稳\
+                                 健、健康发展。"]
 
     topicmodelling = TopicModelling()
     for unseen_doc in unseen_raw_documents_list:
