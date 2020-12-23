@@ -92,11 +92,17 @@ class TopicModelling(object):
                                                                              new_dict_path=new_dict_path)
         else:
             # 否则重新创建词典
+            start_time = time.time()
             corpora_dictionary, documents_token_list = self.create_dictionary(raw_documents_list,
                                                                               save_path=new_dict_path,
                                                                               is_saved=is_saved_dict)
+            end_time = time.time()
+            logging.info("there are {} mins spent to create a new dictionary ... ".format((end_time-start_time)/60))
         # 根据新词典对文档(或语料)生成对应的词袋向量
+        start_time = time.time()
         bow_vector = [corpora_dictionary.doc2bow(doc_token) for doc_token in documents_token_list]
+        end_time = time.time()
+        logging.info("there are {} mins spent to calculate bow-vector ... ".format((end_time - start_time) / 60))
         if bow_vector_save_path:
             corpora.MmCorpus.serialize(bow_vector_save_path, bow_vector)
 
@@ -161,22 +167,43 @@ class TopicModelling(object):
         logging.info("encode historical label list by sklearn preprocessing for training ... ")
         label_name_list = le.classes_  # ['中性' '利好' '利空'] -> [0, 1, 2]
 
-        # 根据历史新闻数据库创建词典，以及计算每个历史新闻的词袋向量
-        start_time = time.time()
-        _, _, historical_bow_vec = self.create_bag_of_word_representation(historical_raw_documents_list,
-                                                                          new_dict_path=ori_dict_path,
-                                                                          is_saved_dict=True)
-        end_time = time.time()
-        logging.info("create dictionary of historical news, and serialized in path -> {}, which took {} \
-                      secs ... ".format(ori_dict_path, (end_time-start_time)/60))
+        # 根据历史新闻数据库创建词典，以及计算每个历史新闻的词袋向量；如果历史数据库创建的字典存在，则加载进内存
+        # 用未见过的新闻tokens去更新该词典
+        if not os.path.exists(ori_dict_path):
+            if not os.path.exists(bowvec_save_path):
+                _, _, historical_bow_vec = self.create_bag_of_word_representation(historical_raw_documents_list,
+                                                                                  new_dict_path=ori_dict_path,
+                                                                                  bow_vector_save_path=bowvec_save_path,
+                                                                                  is_saved_dict=True)
+                logging.info("create dictionary of historical news, and serialized in path -> {} ... ".format(ori_dict_path))
+                logging.info("create bow-vector of historical news, and serialized in path -> {} ... ".format(bowvec_save_path))
+            else:
+                _, _, _ = self.create_bag_of_word_representation(historical_raw_documents_list,
+                                                                 new_dict_path=ori_dict_path,
+                                                                 is_saved_dict=True)
+                logging.info("create dictionary of historical news, and serialized in path -> {} ... ".format(ori_dict_path))
+        else:
+            if not os.path.exists(bowvec_save_path):
+                _, _, historical_bow_vec = self.create_bag_of_word_representation(historical_raw_documents_list,
+                                                                                  new_dict_path=ori_dict_path,
+                                                                                  bow_vector_save_path=bowvec_save_path,
+                                                                                  is_saved_dict=True)
+                logging.info("historical news dictionary existed, which saved in path -> {}, but not the historical bow-vector"
+                             " ... ".format(ori_dict_path))
+            else:
+                historical_bow_vec_mmcorpus = corpora.MmCorpus(bowvec_save_path)  # type -> <gensim.corpora.mmcorpus.MmCorpus>
+                historical_bow_vec = []
+                for _bow in historical_bow_vec_mmcorpus:
+                    historical_bow_vec.append(_bow)
+                logging.info("both historical news dictionary and bow-vector existed, load historical bow-vector to memory ... ")
 
         start_time = time.time()
         updated_dictionary_with_old_and_unseen_news, unssen_documents_token_list = self.renew_dictionary(ori_dict_path,
-                                                                                                         [unseen_raw_document])
+                                                                                                         [unseen_raw_document],
+                                                                                                         is_saved=True)
         end_time = time.time()
-        logging.info("renew dictionary took {} secs ... ".format((end_time - start_time) / 60))
-
-        os.remove(ori_dict_path)  # 删除掉该字典
+        logging.info("renew dictionary with unseen news tokens, and serialized in path -> {}, "
+                     "which took {} mins ... ".format(ori_dict_path, (end_time-start_time)/60))
 
         unseen_bow_vector = [updated_dictionary_with_old_and_unseen_news.doc2bow(doc_token) for doc_token in
                              unssen_documents_token_list]
@@ -188,7 +215,8 @@ class TopicModelling(object):
         if is_saved_bow_vector and bowvec_save_path:
             corpora.MmCorpus.serialize(bowvec_save_path,
                                        updated_bow_vector_with_old_and_unseen_news)  # 保存更新后的bow向量，即包括新旧新闻的bow向量集
-        logging.info("combined bow vector(type -> 'list') generated by historical news with unseen bow vector to create a new one ... ")
+        logging.info("combined bow vector(type -> 'list') generated by historical news with unseen bow "
+                     "vector to create a new one ... ")
 
         if topic_model_type == "lsi":
             start_time = time.time()
@@ -196,8 +224,8 @@ class TopicModelling(object):
                                                                           updated_bow_vector_with_old_and_unseen_news,
                                                                           model_type="tfidf")  # type -> <gensim.interfaces.TransformedCorpus object>
             end_time = time.time()
-            logging.info("regenerated TF-IDF model vector by updated dictionary and updated bow-vector, which took {} \
-                          secs ... ".format((end_time-start_time)/60))
+            logging.info("regenerated TF-IDF model vector by updated dictionary and updated bow-vector, "
+                         "which took {} mins ... ".format((end_time-start_time)/60))
 
             start_time = time.time()
             model = models.LsiModel(updated_tfidf_model_vector,
@@ -205,31 +233,31 @@ class TopicModelling(object):
                                     num_topics=config.TOPIC_NUMBER)  # 初始化模型
             model_vector = model[updated_tfidf_model_vector]  # type -> <gensim.interfaces.TransformedCorpus object>
             end_time = time.time()
-            logging.info("regenerated LSI model vector space by updated TF-IDF model vector space, which took {} \
-                          secs ... ".format((end_time-start_time)/60))
+            logging.info("regenerated LSI model vector space by updated TF-IDF model vector space, "
+                         "which took {} mins ... ".format((end_time-start_time)/60))
         elif topic_model_type == "lda":
             start_time = time.time()
             model_vector = self.transform_vectorized_corpus(updated_dictionary_with_old_and_unseen_news,
                                                             updated_bow_vector_with_old_and_unseen_news,
                                                             model_type="lda")
             end_time = time.time()
-            logging.info("regenerated LDA model vector space by updated dictionary and bow-vector, which took {} \
-                          secs ... ".format((end_time-start_time)/60))
+            logging.info("regenerated LDA model vector space by updated dictionary and bow-vector, "
+                         "which took {} mins ... ".format((end_time-start_time)/60))
 
         # 将gensim.interfaces.TransformedCorpus类型的lsi模型向量转为numpy矩阵
         start_time = time.time()
         latest_matrix = corpus2dense(model_vector,
                                      num_terms=model_vector.obj.num_terms).T
         end_time = time.time()
-        logging.info("transform {} model vector space to numpy.adarray, which took {} secs ... ".format(topic_model_type.upper(),
-                                                                                                        (end_time-start_time)/60))
+        logging.info("transform {} model vector space to numpy.adarray, "
+                     "which took {} mins ... ".format(topic_model_type.upper(), (end_time-start_time)/60))
 
         # 利用历史数据的话题模型向量(或特征)，进一步训练新闻分类器
         start_time = time.time()
         train_x, train_y, test_x, test_y = utils.generate_training_set(latest_matrix[:-1, :], Y)
         clf = self.classifier.train(train_x, train_y, test_x, test_y, model_type=classifier_model)
         end_time = time.time()
-        logging.info("finished training by sklearn {} using latest {} model vector space, which took {} sec ... "
+        logging.info("finished training by sklearn {} using latest {} model vector space, which took {} mins ... "
                      .format(classifier_model.upper(), topic_model_type.upper(), (end_time-start_time)/60))
 
         label_id = clf.predict(latest_matrix[-1, :].reshape(1, -1))[0]
