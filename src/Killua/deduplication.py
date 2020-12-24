@@ -34,6 +34,8 @@ class Deduplication(object):
                                                  query={"Date": {"$regex": _date}})
             except Exception:
                 continue
+            if data_df is None:
+                continue
             data_df_drop_duplicate = data_df.drop_duplicates(["Url"])
             for _id in list(set(data_df["_id"]) - set(data_df_drop_duplicate["_id"])):
                 collection.delete_one({'_id': _id})
