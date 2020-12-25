@@ -62,6 +62,19 @@ def gen_dates_list(date_list, date_range):
     return date_list_latest
 
 
+def get_date_before(n_days):
+    """
+    获取前n_days天的日期，如今天是2020-12-25，当n_days=1，返回"2020-12-24"
+    :param n_days: 前n_days天数，如n_days=1，即前1天
+    """
+    today = datetime.datetime.now()
+    # 计算偏移量
+    offset = datetime.timedelta(days=-n_days)
+    # 获取想要的日期的时间
+    re_date = (today + offset).strftime('%Y-%m-%d')
+    return re_date
+
+
 def search_max_pages_num(first_url, date):
     """
     主要针对金融界网站

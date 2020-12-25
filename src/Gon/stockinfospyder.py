@@ -40,7 +40,7 @@ class StockInfoSpyder(Spyder):
                 self.col_basic_info.insert_one(_dict)
         return stock_info_df
 
-    def get_historical_news(self, start_date, end_date, freq="day"):
+    def get_historical_news(self, start_date=None, end_date=None, freq="day"):
         stock_symbol_list = self.col_basic_info.distinct("symbol")
         if len(stock_symbol_list) == 0:
             stock_symbol_list = self.get_stock_code_info()
@@ -55,6 +55,13 @@ class StockInfoSpyder(Spyder):
             for symbol in stock_symbol_list:
                 if int(symbol[2:]) >= int(start_stock_code):
                     try:
+                        # TODO
+                        if start_date is None:
+                            # 如果该symbol有历史数据，如果有则从API获取从数据库中最近的时间开始直到现在的所有价格数据
+                            # 如果该symbol无历史数据，则从API获取从2015年1月1日开始直到现在的所有价格数据
+                            start_date = "20150101"
+                        if end_date is None:
+                            pass
                         stock_zh_a_daily_hfq_df = ak.stock_zh_a_daily(symbol=symbol,
                                                                       start_date=start_date,
                                                                       end_date=end_date,
@@ -85,4 +92,9 @@ class StockInfoSpyder(Spyder):
 if __name__ == "__main__":
     stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
     stock_info_spyder.get_stock_code_info()
-    # stock_info_spyder.get_historical_news("20150101", "20201204")
+    # 指定时间段，获取历史数据
+    # stock_info_spyder.get_historical_news(start_date="20150101", end_date="20201204")
+    # 如果没有指定时间段，且数据库已存在部分数据，则从最新的数据时间开始获取直到现在，比如
+    # 数据库里已有sh600000价格数据到2020-12-03号，如不设定具体时间，则从自动获取sh600000
+    # 自2020-12-04至当前的价格数据
+    # stock_info_spyder.get_historical_news()

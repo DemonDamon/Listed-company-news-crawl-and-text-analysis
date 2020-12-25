@@ -80,7 +80,8 @@ class Tokenization(object):
 
     def update_news_database_rows(self,
                                   database_name,
-                                  collection_name):
+                                  collection_name,
+                                  incremental_column_name="RelatedStockCodes"):
         name_code_df = self.database.get_data(config.STOCK_DATABASE_NAME,
                                               config.COLLECTION_NAME_STOCK_BASIC_INFO,
                                               keys=["name", "code"])
@@ -88,15 +89,21 @@ class Tokenization(object):
         data = self.database.get_collection(database_name, collection_name).find()
         for row in data:
             # if row["Date"] > "2019-05-20 00:00:00":
+            # 在新增数据中，并不存在更新列，但是旧数据中已存在更新列，因此需要
+            # 判断数据结构中是否包含该incremental_column_name字段
+            if incremental_column_name not in row.keys():
                 related_stock_codes_list = self.find_relevant_stock_codes_in_article(
                                              row["Article"], name_code_dict)
                 self.database.update_row(database_name,
                                          collection_name,
                                          {"_id": row["_id"]},
-                                         {"RelatedStockCodes": " ".join(related_stock_codes_list)}
+                                         {incremental_column_name: " ".join(related_stock_codes_list)}
                                          )
-                logging.info("[{} -> {} -> {}] updated RelatedStockCodes key value ... "
-                             .format(database_name, collection_name, row["Date"]))
+                logging.info("[{} -> {} -> {}] updated {} key value ... "
+                             .format(database_name, collection_name, row["Date"], incremental_column_name))
+            else:
+                logging.info("[{} -> {} -> {}] has already existed {} key value ... "
+                             .format(database_name, collection_name, row["Date"], incremental_column_name))
 
 
 if __name__ == "__main__":
