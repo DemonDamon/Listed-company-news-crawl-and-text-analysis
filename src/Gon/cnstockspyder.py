@@ -239,27 +239,30 @@ class CnStockSpyder(Spyder):
     def get_realtime_news(self, url, category_chn=None, interval=60):
         logging.info("start real-time crawling of URL -> {} ... ".format(url))
         assert category_chn is not None
-        today_date = time.strftime("%Y-%m-%d", time.localtime(time.time()))
-        last_date = utils.get_date_before(1)
-        last_2_date = utils.get_date_before(2)
-        latest_3_days_crawled_href = self.db_obj.get_data(self.db_name,
-                                                          self.col_name,
-                                                          query={"Date": {"$regex": today_date}},
-                                                          keys=["Url"])["Url"].to_list()
-        latest_3_days_crawled_href.extend(self.db_obj.get_data(self.db_name,
-                                                               self.col_name,
-                                                               query={"Date": {"$regex": last_date}},
-                                                               keys=["Url"])["Url"].to_list())
-        latest_3_days_crawled_href.extend(self.db_obj.get_data(self.db_name,
-                                                               self.col_name,
-                                                               query={"Date": {"$regex": last_2_date}},
-                                                               keys=["Url"])["Url"].to_list())
+        # today_date = time.strftime("%Y-%m-%d", time.localtime(time.time()))
+        # last_date = utils.get_date_before(1)
+        # last_2_date = utils.get_date_before(2)
+        # latest_3_days_crawled_href = self.db_obj.get_data(self.db_name,
+        #                                                   self.col_name,
+        #                                                   query={"Date": {"$regex": today_date}},
+        #                                                   keys=["Url"])["Url"].to_list()
+        # latest_3_days_crawled_href.extend(self.db_obj.get_data(self.db_name,
+        #                                                        self.col_name,
+        #                                                        query={"Date": {"$regex": last_date}},
+        #                                                        keys=["Url"])["Url"].to_list())
+        # latest_3_days_crawled_href.extend(self.db_obj.get_data(self.db_name,
+        #                                                        self.col_name,
+        #                                                        query={"Date": {"$regex": last_2_date}},
+        #                                                        keys=["Url"])["Url"].to_list())
+        crawled_urls = self.db_obj.get_data(self.db_name,
+                                            self.col_name,
+                                            keys=["Url"])["Url"].to_list()
         while True:
             # 每隔一定时间轮询该网址
             bs = utils.html_parser(url)
             for li in bs.find_all("li", attrs={"class": ["newslist"]}):
                 a = li.find_all("h2")[0].find("a")
-                if a["href"] not in latest_3_days_crawled_href:
+                if a["href"] not in crawled_urls:  # latest_3_days_crawled_href
                     result = self.get_url_info(a["href"])
                     while not result:
                         self.terminated_amount += 1
