@@ -314,6 +314,7 @@ class CnStockSpyder(Spyder):
                             # self.col.insert_one(data)
                             self.db_obj.insert_data(self.db_name, self.col_name, data)
                             logging.info("[SUCCESS] {} {} {}".format(date, a["title"], a["href"]))
+                            crawled_urls.append(a["href"])
             logging.info("sleep {} secs then request {} again ... ".format(interval, url))
             time.sleep(interval)
 
