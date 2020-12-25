@@ -361,7 +361,7 @@ if __name__ == '__main__':
     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
 
-    # 开启多线程并行爬取
+    # 开启多线程并行实时爬取
     thread_list = []
     for url, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
         thread = threading.Thread(target=cnstock_spyder.get_realtime_news, args=(url, type_chn, 60))
