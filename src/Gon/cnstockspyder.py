@@ -343,7 +343,6 @@ Example-2:
 if __name__ == '__main__':
     from Kite.database import Database
     from Kite import config
-    from concurrent import futures
     import threading
 
     obj = Database()
