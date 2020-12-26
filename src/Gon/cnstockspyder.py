@@ -254,6 +254,7 @@ class CnStockSpyder(Spyder):
         #                                                        self.col_name,
         #                                                        query={"Date": {"$regex": last_2_date}},
         #                                                        keys=["Url"])["Url"].to_list())
+        # TODO: 由于cnstock爬取的数据量并不大，这里暂时是抽取历史所有数据进行去重，之后会修改去重策略
         crawled_urls = self.db_obj.get_data(self.db_name,
                                             self.col_name,
                                             keys=["Url"])["Url"].to_list()
