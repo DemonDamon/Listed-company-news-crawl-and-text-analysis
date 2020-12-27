@@ -237,7 +237,7 @@ class CnStockSpyder(Spyder):
         driver.quit()
 
     def get_realtime_news(self, url, category_chn=None, interval=60):
-        logging.info("start real-time crawling of URL -> {} ... ".format(url))
+        logging.info("start real-time crawling of URL -> {}, request every {} secs ... ".format(url, interval))
         assert category_chn is not None
         # today_date = time.strftime("%Y-%m-%d", time.localtime(time.time()))
         # last_date = utils.get_date_before(1)
@@ -316,10 +316,8 @@ class CnStockSpyder(Spyder):
                             self.db_obj.insert_data(self.db_name, self.col_name, data)
                             logging.info("[SUCCESS] {} {} {}".format(date, a["title"], a["href"]))
                             crawled_urls.append(a["href"])
-            logging.info("sleep {} secs then request {} again ... ".format(interval, url))
+            # logging.info("sleep {} secs then request {} again ... ".format(interval, url))
             time.sleep(interval)
-
-# 爬某个url存在已知列表就break
 
 
 # """

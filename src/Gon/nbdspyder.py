@@ -195,8 +195,77 @@ class NbdSpyder(Spyder):
                 if not is_stop:
                     page_start_id += 1
 
-    def get_realtime_news(self, url):
-        pass
+    def get_realtime_news(self, interval=60):
+        page_url = "{}/1".format(config.WEBSITES_LIST_TO_BE_CRAWLED_NBD)
+        logging.info("start real-time crawling of URL -> {}, request every {} secs ... ".format(page_url, interval))
+        # TODO: 由于cnstock爬取的数据量并不大，这里暂时是抽取历史所有数据进行去重，之后会修改去重策略
+        crawled_urls = []
+        date_list = self.db_obj.get_data(self.db_name, self.col_name, keys=["Date"])["Date"].to_list()
+        latest_date = max(date_list)
+        while True:
+            # 每隔一定时间轮询该网址
+            bs = utils.html_parser(page_url)
+            a_list = bs.find_all("a")
+            for a in a_list:
+                if "click-statistic" in a.attrs and a.string \
+                        and a["click-statistic"].find("Article_") != -1 \
+                        and a["href"].find("http://www.nbd.com.cn/articles/") != -1:
+                    if a["href"] not in crawled_urls:
+                        result = self.get_url_info(a["href"])
+                        while not result:
+                            self.terminated_amount += 1
+                            if self.terminated_amount > config.NBD_MAX_REJECTED_AMOUNTS:
+                                # 始终无法爬取的URL保存起来
+                                with open(config.RECORD_NBD_FAILED_URL_TXT_FILE_PATH, "a+") as file:
+                                    file.write("{}\n".format(a["href"]))
+                                logging.info("rejected by remote server longer than {} minutes, "
+                                             "and the failed url has been written in path {}"
+                                             .format(config.NBD_MAX_REJECTED_AMOUNTS,
+                                                     config.RECORD_NBD_FAILED_URL_TXT_FILE_PATH))
+                                break
+                            logging.info("rejected by remote server, request {} again after "
+                                         "{} seconds...".format(a["href"], 60 * self.terminated_amount))
+                            time.sleep(60 * self.terminated_amount)
+                            result = self.get_url_info(a["href"])
+                        if not result:
+                            # 爬取失败的情况
+                            logging.info("[FAILED] {} {}".format(a.string, a["href"]))
+                        else:
+                            # 有返回但是article为null的情况
+                            date, article = result
+                            if date > latest_date:
+                                while article == "" and self.is_article_prob >= .1:
+                                    self.is_article_prob -= .1
+                                    result = self.get_url_info(a["href"])
+                                    while not result:
+                                        self.terminated_amount += 1
+                                        if self.terminated_amount > config.NBD_MAX_REJECTED_AMOUNTS:
+                                            # 始终无法爬取的URL保存起来
+                                            with open(config.RECORD_NBD_FAILED_URL_TXT_FILE_PATH, "a+") as file:
+                                                file.write("{}\n".format(a["href"]))
+                                            logging.info("rejected by remote server longer than {} minutes, "
+                                                         "and the failed url has been written in path {}"
+                                                         .format(config.NBD_MAX_REJECTED_AMOUNTS,
+                                                                 config.RECORD_NBD_FAILED_URL_TXT_FILE_PATH))
+                                            break
+                                        logging.info("rejected by remote server, request {} again after "
+                                                     "{} seconds...".format(a["href"], 60 * self.terminated_amount))
+                                        time.sleep(60 * self.terminated_amount)
+                                        result = self.get_url_info(a["href"])
+                                    date, article = result
+                                self.is_article_prob = .5
+                                if article != "":
+                                    data = {"Date": date,
+                                            # "PageId": page_url.split("/")[-1],
+                                            "Url": a["href"],
+                                            "Title": a.string,
+                                            "Article": article}
+                                    # self.col.insert_one(data)
+                                    self.db_obj.insert_data(self.db_name, self.col_name, data)
+                                    crawled_urls.append(a["href"])
+                                    logging.info("[SUCCESS] {} {} {}".format(date, a.string, a["href"]))
+            logging.info("sleep {} secs then request again ... ".format(interval))
+            time.sleep(interval)
 
 
 # """
@@ -218,9 +287,22 @@ Example-2:
 if __name__ == '__main__':
     from Kite.database import Database
     from Kite import config
+
+    from Leorio.tokenization import Tokenization
+
+    from Killua.denull import DeNull
+    from Killua.deduplication import Deduplication
+
     import threading
 
     # 如果没有历史数据从头爬取，如果已爬取历史数据，则从最新的时间开始爬取
     # 如历史数据中最近的新闻时间是"2020-12-09 20:37:10"，则从该时间开始爬取
     nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
     nbd_spyder.get_historical_news()
+
+    tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
+    tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+
+    nbd_spyder.get_realtime_news()
