@@ -51,7 +51,7 @@ class JrjSpyder(Spyder):
 
         return [date, article]
 
-    def get_historical_news(self, url, start_date="2015-01-01", end_date=None):
+    def get_historical_news(self, url, start_date=None, end_date=None):
         # # 抽取数据库中已爬取的从start_date到latest_date_str所有新闻，避免重复爬取
         # # 比如数据断断续续爬到了2016-10-10 15:00:00时间节点，但是在没调整参数的情
         # # 况下，从2015-01-01(自己设定)开始重跑程序会导致大量重复数据，因此在这里稍
@@ -76,6 +76,19 @@ class JrjSpyder(Spyder):
         crawled_urls_list = []
         if end_date is None:
             end_date = datetime.datetime.now().strftime("%Y-%m-%d")
+
+        if start_date is None:
+            # 如果start_date是None，则从历史数据库最新的日期补充爬取到最新日期
+            # e.g. history_latest_date_str -> "2020-12-08"
+            #      history_latest_date_dt -> datetime.date(2020, 12, 08)
+            #      start_date -> "2020-12-09"
+            history_latest_date_str = max(self.db_obj.get_data(self.db_name,
+                                                               self.col_name,
+                                                               keys=["Date"])["Date"].to_list()).split(" ")[0]
+            history_latest_date_dt = datetime.datetime.strptime(history_latest_date_str, "%Y-%m-%d").date()
+            offset = datetime.timedelta(days=1)
+            start_date = (history_latest_date_dt + offset).strftime('%Y-%m-%d')
+
         dates_list = utils.get_date_list_from_range(start_date, end_date)
         dates_separated_into_ranges_list = utils.gen_dates_list(dates_list, config.JRJ_DATE_RANGE)
 
@@ -152,18 +165,101 @@ class JrjSpyder(Spyder):
                                 else:
                                     logging.info("[QUIT] {}".format(a.string))
 
-    def get_realtime_news(self, url):
-        pass
+    def get_realtime_news(self, interval=60):
+        while True:
+            today_date = datetime.datetime.now().strftime("%Y-%m-%d")
+            _url = "{}/{}/{}_1.shtml".format(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ,
+                                             today_date.replace("-", "")[0:6],
+                                             today_date.replace("-", ""))
+            max_pages_num = utils.search_max_pages_num(first_url, date)
+            for num in range(1, max_pages_num + 1):
+                _url = "{}/{}/{}_{}.shtml".format(url, date.replace("-", "")[0:6], date.replace("-", ""), str(num))
+                bs = utils.html_parser(_url)
+                a_list = bs.find_all("a")
+                for a in a_list:
+                    if "href" in a.attrs and a.string and \
+                            a["href"].find("/{}/{}/".format(date.replace("-", "")[:4],
+                                                            date.replace("-", "")[4:6])) != -1:
+                        if a["href"] not in crawled_urls_list:
+                            # 如果标题不包含"收盘","报于"等字样，即可写入数据库，因为包含这些字样标题的新闻多为机器自动生成
+                            if a.string.find("收盘") == -1 and a.string.find("报于") == -1 and \
+                                    a.string.find("新三板挂牌上市") == -1:
+                                result = self.get_url_info(a["href"], date)
+                                while not result:
+                                    self.terminated_amount += 1
+                                    if self.terminated_amount > config.JRJ_MAX_REJECTED_AMOUNTS:
+                                        # 始终无法爬取的URL保存起来
+                                        with open(config.RECORD_JRJ_FAILED_URL_TXT_FILE_PATH, "a+") as file:
+                                            file.write("{}\n".format(a["href"]))
+                                        logging.info("rejected by remote server longer than {} minutes, "
+                                                     "and the failed url has been written in path {}"
+                                                     .format(config.JRJ_MAX_REJECTED_AMOUNTS,
+                                                             config.RECORD_JRJ_FAILED_URL_TXT_FILE_PATH))
+                                        break
+                                    logging.info("rejected by remote server, request {} again after "
+                                                 "{} seconds...".format(a["href"], 60 * self.terminated_amount))
+                                    time.sleep(60 * self.terminated_amount)
+                                    result = self.get_url_info(a["href"], date)
+                                if not result:
+                                    # 爬取失败的情况
+                                    logging.info("[FAILED] {} {}".format(a.string, a["href"]))
+                                else:
+                                    # 有返回但是article为null的情况
+                                    article_specific_date, article = result
+                                    while article == "" and self.is_article_prob >= .1:
+                                        self.is_article_prob -= .1
+                                        result = self.get_url_info(a["href"], date)
+                                        while not result:
+                                            self.terminated_amount += 1
+                                            if self.terminated_amount > config.JRJ_MAX_REJECTED_AMOUNTS:
+                                                # 始终无法爬取的URL保存起来
+                                                with open(config.RECORD_JRJ_FAILED_URL_TXT_FILE_PATH, "a+") as file:
+                                                    file.write("{}\n".format(a["href"]))
+                                                logging.info("rejected by remote server longer than {} minutes, "
+                                                             "and the failed url has been written in path {}"
+                                                             .format(config.JRJ_MAX_REJECTED_AMOUNTS,
+                                                                     config.RECORD_JRJ_FAILED_URL_TXT_FILE_PATH))
+                                                break
+                                            logging.info("rejected by remote server, request {} again after "
+                                                         "{} seconds...".format(a["href"],
+                                                                                60 * self.terminated_amount))
+                                            time.sleep(60 * self.terminated_amount)
+                                            result = self.get_url_info(a["href"], date)
+                                        article_specific_date, article = result
+                                    self.is_article_prob = .5
+                                    if article != "":
+                                        data = {"Date": article_specific_date,
+                                                "Url": a["href"],
+                                                "Title": a.string,
+                                                "Article": article}
+                                        # self.col.insert_one(data)
+                                        self.db_obj.insert_data(self.db_name, self.col_name, data)
+                                        logging.info("[SUCCESS] {} {} {}".format(article_specific_date,
+                                                                                 a.string,
+                                                                                 a["href"]))
+                                self.terminated_amount = 0  # 爬取结束后重置该参数
+                            else:
+                                logging.info("[QUIT] {}".format(a.string))
+            logging.info("sleep {} secs then request again ... ".format(interval))
+            time.sleep(interval)
+
+# """
+# Example-1:
+# 爬取历史新闻数据
+# """
+# if __name__ == "__main__":
+#     jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+#     # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2015-01-01", "2020-12-03")
+#
+#     # TODO：继续爬取RECORD_JRJ_FAILED_URL_TXT_FILE_PATH文件中失败的URL
+#     pass
 
 
-if __name__ == "__main__":
+"""
+Example-2:
+爬取实时新闻数据
+"""
+if __name__ == '__main__':
     jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
-    jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2020-12-04", "2020-12-08")
-    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2020-07-06", "2020-12-08")
-    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2018-04-03", "2020-12-06")
-    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2018-01-02", "2020-12-03")
-    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2017-07-18", "2018-01-01")
-    # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2016-04-15", "2020-12-03")
-
-    # TODO：继续爬取RECORD_JRJ_FAILED_URL_TXT_FILE_PATH文件中失败的URL
-    pass
+    jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ)  # 补充爬虫数据到最新日期
+    jrj_spyder.get_realtime_news()
