@@ -263,7 +263,7 @@ class JrjSpyder(Spyder):
                             else:
                                 logging.info("[QUIT] {}".format(a.string))
                             crawled_urls_list.append(a["href"])
-            logging.info("sleep {} secs then request again ... ".format(interval))
+            # logging.info("sleep {} secs then request again ... ".format(interval))
             time.sleep(interval)
 
 
