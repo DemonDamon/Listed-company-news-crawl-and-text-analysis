@@ -40,6 +40,7 @@ class CnStockSpyder(Spyder):
         self.terminated_amount = 0
         self.db_name = database_name
         self.col_name = collection_name
+        self.tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
 
     def get_url_info(self, url):
         try:
@@ -255,6 +256,10 @@ class CnStockSpyder(Spyder):
         #                                                        query={"Date": {"$regex": last_2_date}},
         #                                                        keys=["Url"])["Url"].to_list())
         # TODO: 由于cnstock爬取的数据量并不大，这里暂时是抽取历史所有数据进行去重，之后会修改去重策略
+        name_code_df = self.db_obj.get_data(config.STOCK_DATABASE_NAME,
+                                            config.COLLECTION_NAME_STOCK_BASIC_INFO,
+                                            keys=["name", "code"])
+        name_code_dict = dict(name_code_df.values)
         crawled_urls = self.db_obj.get_data(self.db_name,
                                             self.col_name,
                                             keys=["Url"])["Url"].to_list()
@@ -307,11 +312,14 @@ class CnStockSpyder(Spyder):
                             date, article = result
                         self.is_article_prob = .5
                         if article != "":
+                            related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
+                                                                                                              name_code_dict)
                             data = {"Date": date,
                                     "Category": category_chn,
                                     "Url": a["href"],
                                     "Title": a["title"],
-                                    "Article": article}
+                                    "Article": article,
+                                    "RelatedStockCodes": " ".join(related_stock_codes_list)}
                             # self.col.insert_one(data)
                             self.db_obj.insert_data(self.db_name, self.col_name, data)
                             logging.info("[SUCCESS] {} {} {}".format(date, a["title"], a["href"]))
@@ -332,8 +340,11 @@ class CnStockSpyder(Spyder):
 #         logging.info("finished ...")
 #         time.sleep(30)
 #
-#     # TODO：继续爬取RECORD_CNSTOCK_FAILED_URL_TXT_FILE_PATH文件中失败的URL
-#     pass
+#     tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
+#     tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+#     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+#     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+
 
 """
 Example-2:

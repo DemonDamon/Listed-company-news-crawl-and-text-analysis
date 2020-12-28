@@ -6,9 +6,11 @@ A股动态：http://stocks.nbd.com.cn/columns/275/page/1
 import __init__
 from spyder import Spyder
 
-from Kite.database import Database
-from Kite import config
 from Kite import utils
+from Kite import config
+from Kite.database import Database
+
+from Leorio.tokenization import Tokenization
 
 import re
 import time
@@ -28,6 +30,7 @@ class NbdSpyder(Spyder):
         self.terminated_amount = 0
         self.db_name = database_name
         self.col_name = collection_name
+        self.tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
 
     def get_url_info(self, url):
         try:
@@ -198,6 +201,10 @@ class NbdSpyder(Spyder):
     def get_realtime_news(self, interval=60):
         page_url = "{}/1".format(config.WEBSITES_LIST_TO_BE_CRAWLED_NBD)
         logging.info("start real-time crawling of URL -> {}, request every {} secs ... ".format(page_url, interval))
+        name_code_df = self.db_obj.get_data(config.STOCK_DATABASE_NAME,
+                                            config.COLLECTION_NAME_STOCK_BASIC_INFO,
+                                            keys=["name", "code"])
+        name_code_dict = dict(name_code_df.values)
         crawled_urls = []
         date_list = self.db_obj.get_data(self.db_name, self.col_name, keys=["Date"])["Date"].to_list()
         latest_date = max(date_list)
@@ -257,11 +264,14 @@ class NbdSpyder(Spyder):
                                     date, article = result
                                 self.is_article_prob = .5
                                 if article != "":
+                                    related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
+                                                                                                                      name_code_dict)
                                     data = {"Date": date,
                                             # "PageId": page_url.split("/")[-1],
                                             "Url": a["href"],
                                             "Title": a.string,
-                                            "Article": article}
+                                            "Article": article,
+                                            "RelatedStockCodes": " ".join(related_stock_codes_list)}
                                     # self.col.insert_one(data)
                                     self.db_obj.insert_data(self.db_name, self.col_name, data)
                                     crawled_urls.append(a["href"])
@@ -276,10 +286,12 @@ class NbdSpyder(Spyder):
 # """
 # if __name__ == "__main__":
 #     nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
-#     nbd_spyder.get_historical_news(start_page684)
+#     nbd_spyder.get_historical_news(start_page=684)
 #
-#     # TODO：继续爬取RECORD_NBD_FAILED_URL_TXT_FILE_PATH文件中失败的URL
-#     pass
+#     tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
+#     tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+#     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+#     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
 
 
 """

@@ -6,9 +6,11 @@
 import __init__
 from spyder import Spyder
 
-from Kite.database import Database
-from Kite import config
 from Kite import utils
+from Kite import config
+from Kite.database import Database
+
+from Leorio.tokenization import Tokenization
 
 import time
 import datetime
@@ -28,6 +30,7 @@ class JrjSpyder(Spyder):
         self.terminated_amount = 0
         self.db_name = database_name
         self.col_name = collection_name
+        self.tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
 
     def get_url_info(self, url, specific_date):
         try:
@@ -166,6 +169,10 @@ class JrjSpyder(Spyder):
                                     logging.info("[QUIT] {}".format(a.string))
 
     def get_realtime_news(self, interval=60):
+        name_code_df = self.db_obj.get_data(config.STOCK_DATABASE_NAME,
+                                            config.COLLECTION_NAME_STOCK_BASIC_INFO,
+                                            keys=["name", "code"])
+        name_code_dict = dict(name_code_df.values)
         while True:
             today_date = datetime.datetime.now().strftime("%Y-%m-%d")
             _url = "{}/{}/{}_1.shtml".format(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ,
@@ -228,10 +235,13 @@ class JrjSpyder(Spyder):
                                         article_specific_date, article = result
                                     self.is_article_prob = .5
                                     if article != "":
+                                        related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
+                                                                                                                          name_code_dict)
                                         data = {"Date": article_specific_date,
                                                 "Url": a["href"],
                                                 "Title": a.string,
-                                                "Article": article}
+                                                "Article": article,
+                                                "RelatedStockCodes": " ".join(related_stock_codes_list)}
                                         # self.col.insert_one(data)
                                         self.db_obj.insert_data(self.db_name, self.col_name, data)
                                         logging.info("[SUCCESS] {} {} {}".format(article_specific_date,
@@ -243,16 +253,19 @@ class JrjSpyder(Spyder):
             logging.info("sleep {} secs then request again ... ".format(interval))
             time.sleep(interval)
 
+
 # """
 # Example-1:
 # 爬取历史新闻数据
 # """
 # if __name__ == "__main__":
 #     jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
-#     # jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, "2015-01-01", "2020-12-03")
+#     jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, start_date="2015-01-01")
 #
-#     # TODO：继续爬取RECORD_JRJ_FAILED_URL_TXT_FILE_PATH文件中失败的URL
-#     pass
+#     tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
+#     tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+#     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+#     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
 
 
 """
