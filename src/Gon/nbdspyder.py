@@ -198,12 +198,14 @@ class NbdSpyder(Spyder):
     def get_realtime_news(self, interval=60):
         page_url = "{}/1".format(config.WEBSITES_LIST_TO_BE_CRAWLED_NBD)
         logging.info("start real-time crawling of URL -> {}, request every {} secs ... ".format(page_url, interval))
-        # TODO: 由于cnstock爬取的数据量并不大，这里暂时是抽取历史所有数据进行去重，之后会修改去重策略
         crawled_urls = []
         date_list = self.db_obj.get_data(self.db_name, self.col_name, keys=["Date"])["Date"].to_list()
         latest_date = max(date_list)
         while True:
             # 每隔一定时间轮询该网址
+            if len(crawled_urls) > 100:
+                # 防止list过长，内存消耗大，维持list在100条
+                crawled_urls.pop(0)
             bs = utils.html_parser(page_url)
             a_list = bs.find_all("a")
             for a in a_list:

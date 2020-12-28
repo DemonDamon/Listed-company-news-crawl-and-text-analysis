@@ -11,6 +11,7 @@ from Kite import config
 from Kite import utils
 
 import time
+import datetime
 import logging
 
 logging.basicConfig(level=logging.INFO,
@@ -44,13 +45,13 @@ class JrjSpyder(Spyder):
         for p in bs.find_all("p"):
             if not p.find_all("jrj_final_daohang_start") and p.attrs == {} and \
                     not p.find_all("input") and not p.find_all("a", attrs={"class": "red"}) and not p.find_all("i") and not p.find_all("span"):
-            # if p.contents[0] != "jrj_final_daohang_start1" and p.attrs == {} and \
-            #         not p.find_all("input") and not p.find_all("a", attrs={"class": "red"}) and not p.find_all("i"):
+                # if p.contents[0] != "jrj_final_daohang_start1" and p.attrs == {} and \
+                #         not p.find_all("input") and not p.find_all("a", attrs={"class": "red"}) and not p.find_all("i"):
                 article += p.text.replace("\r", "").replace("\n", "").replace("\u3000", "")
 
         return [date, article]
 
-    def get_historical_news(self, url, start_date, end_date):
+    def get_historical_news(self, url, start_date="2015-01-01", end_date=None):
         # # 抽取数据库中已爬取的从start_date到latest_date_str所有新闻，避免重复爬取
         # # 比如数据断断续续爬到了2016-10-10 15:00:00时间节点，但是在没调整参数的情
         # # 况下，从2015-01-01(自己设定)开始重跑程序会导致大量重复数据，因此在这里稍
@@ -73,6 +74,8 @@ class JrjSpyder(Spyder):
         #                                                                           len(crawled_urls_list)))
 
         crawled_urls_list = []
+        if end_date is None:
+            end_date = datetime.datetime.now().strftime("%Y-%m-%d")
         dates_list = utils.get_date_list_from_range(start_date, end_date)
         dates_separated_into_ranges_list = utils.gen_dates_list(dates_list, config.JRJ_DATE_RANGE)
 
