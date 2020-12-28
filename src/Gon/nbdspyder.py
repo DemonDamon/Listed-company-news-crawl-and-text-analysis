@@ -276,7 +276,7 @@ class NbdSpyder(Spyder):
                                     self.db_obj.insert_data(self.db_name, self.col_name, data)
                                     crawled_urls.append(a["href"])
                                     logging.info("[SUCCESS] {} {} {}".format(date, a.string, a["href"]))
-            logging.info("sleep {} secs then request again ... ".format(interval))
+            # logging.info("sleep {} secs then request again ... ".format(interval))
             time.sleep(interval)
 
 

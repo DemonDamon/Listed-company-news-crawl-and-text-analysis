@@ -173,25 +173,37 @@ class JrjSpyder(Spyder):
                                             config.COLLECTION_NAME_STOCK_BASIC_INFO,
                                             keys=["name", "code"])
         name_code_dict = dict(name_code_df.values)
+        crawled_urls_list = []
+        is_change_date = False
+        last_date = datetime.datetime.now().strftime("%Y-%m-%d")
         while True:
             today_date = datetime.datetime.now().strftime("%Y-%m-%d")
+            if today_date != last_date:
+                is_change_date = True
+                last_date = today_date
+            if is_change_date:
+                crawled_urls_list = []
+                is_change_date = False
             _url = "{}/{}/{}_1.shtml".format(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ,
                                              today_date.replace("-", "")[0:6],
                                              today_date.replace("-", ""))
-            max_pages_num = utils.search_max_pages_num(first_url, date)
+            max_pages_num = utils.search_max_pages_num(_url, today_date)
             for num in range(1, max_pages_num + 1):
-                _url = "{}/{}/{}_{}.shtml".format(url, date.replace("-", "")[0:6], date.replace("-", ""), str(num))
+                _url = "{}/{}/{}_{}.shtml".format(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ,
+                                                  today_date.replace("-", "")[0:6],
+                                                  today_date.replace("-", ""),
+                                                  str(num))
                 bs = utils.html_parser(_url)
                 a_list = bs.find_all("a")
                 for a in a_list:
                     if "href" in a.attrs and a.string and \
-                            a["href"].find("/{}/{}/".format(date.replace("-", "")[:4],
-                                                            date.replace("-", "")[4:6])) != -1:
+                            a["href"].find("/{}/{}/".format(today_date.replace("-", "")[:4],
+                                                            today_date.replace("-", "")[4:6])) != -1:
                         if a["href"] not in crawled_urls_list:
                             # 如果标题不包含"收盘","报于"等字样，即可写入数据库，因为包含这些字样标题的新闻多为机器自动生成
                             if a.string.find("收盘") == -1 and a.string.find("报于") == -1 and \
                                     a.string.find("新三板挂牌上市") == -1:
-                                result = self.get_url_info(a["href"], date)
+                                result = self.get_url_info(a["href"], today_date)
                                 while not result:
                                     self.terminated_amount += 1
                                     if self.terminated_amount > config.JRJ_MAX_REJECTED_AMOUNTS:
@@ -206,7 +218,7 @@ class JrjSpyder(Spyder):
                                     logging.info("rejected by remote server, request {} again after "
                                                  "{} seconds...".format(a["href"], 60 * self.terminated_amount))
                                     time.sleep(60 * self.terminated_amount)
-                                    result = self.get_url_info(a["href"], date)
+                                    result = self.get_url_info(a["href"], today_date)
                                 if not result:
                                     # 爬取失败的情况
                                     logging.info("[FAILED] {} {}".format(a.string, a["href"]))
@@ -215,7 +227,7 @@ class JrjSpyder(Spyder):
                                     article_specific_date, article = result
                                     while article == "" and self.is_article_prob >= .1:
                                         self.is_article_prob -= .1
-                                        result = self.get_url_info(a["href"], date)
+                                        result = self.get_url_info(a["href"], today_date)
                                         while not result:
                                             self.terminated_amount += 1
                                             if self.terminated_amount > config.JRJ_MAX_REJECTED_AMOUNTS:
@@ -231,7 +243,7 @@ class JrjSpyder(Spyder):
                                                          "{} seconds...".format(a["href"],
                                                                                 60 * self.terminated_amount))
                                             time.sleep(60 * self.terminated_amount)
-                                            result = self.get_url_info(a["href"], date)
+                                            result = self.get_url_info(a["href"], today_date)
                                         article_specific_date, article = result
                                     self.is_article_prob = .5
                                     if article != "":
@@ -250,6 +262,7 @@ class JrjSpyder(Spyder):
                                 self.terminated_amount = 0  # 爬取结束后重置该参数
                             else:
                                 logging.info("[QUIT] {}".format(a.string))
+                            crawled_urls_list.append(a["href"])
             logging.info("sleep {} secs then request again ... ".format(interval))
             time.sleep(interval)
 
@@ -263,9 +276,9 @@ class JrjSpyder(Spyder):
 #     jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, start_date="2015-01-01")
 #
 #     tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
-#     tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
-#     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
-#     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+#     tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+#     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
+#     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
 
 
 """
