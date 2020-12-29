@@ -66,6 +66,10 @@ class NbdSpyder(Spyder):
 
     def get_historical_news(self, start_page=684):
         date_list = self.db_obj.get_data(self.db_name, self.col_name, keys=["Date"])["Date"].to_list()
+        name_code_df = self.db_obj.get_data(config.STOCK_DATABASE_NAME,
+                                            config.COLLECTION_NAME_STOCK_BASIC_INFO,
+                                            keys=["name", "code"])
+        name_code_dict = dict(name_code_df.values)
         if len(date_list) == 0:
             # 说明没有历史数据，从头开始爬取
             crawled_urls_list = []
@@ -122,11 +126,14 @@ class NbdSpyder(Spyder):
                                     date, article = result
                                 self.is_article_prob = .5
                                 if article != "":
+                                    related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
+                                                                                                                      name_code_dict)
                                     data = {"Date": date,
                                             # "PageId": page_url.split("/")[-1],
                                             "Url": a["href"],
                                             "Title": a.string,
-                                            "Article": article}
+                                            "Article": article,
+                                            "RelatedStockCodes": " ".join(related_stock_codes_list)}
                                     # self.col.insert_one(data)
                                     self.db_obj.insert_data(self.db_name, self.col_name, data)
                                     logging.info("[SUCCESS] {} {} {}".format(date, a.string, a["href"]))
@@ -186,10 +193,13 @@ class NbdSpyder(Spyder):
                                     date, article = result
                                 self.is_article_prob = .5
                                 if article != "":
+                                    related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
+                                                                                                                      name_code_dict)
                                     data = {"Date": date,
                                             "Url": a["href"],
                                             "Title": a.string,
-                                            "Article": article}
+                                            "Article": article,
+                                            "RelatedStockCodes": " ".join(related_stock_codes_list)}
                                     self.db_obj.insert_data(self.db_name, self.col_name, data)
                                     logging.info("[SUCCESS] {} {} {}".format(date, a.string, a["href"]))
                             else:
@@ -288,8 +298,6 @@ class NbdSpyder(Spyder):
 #     nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
 #     nbd_spyder.get_historical_news(start_page=684)
 #
-#     tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
-#     tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
 #     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
 #     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
 
@@ -314,8 +322,6 @@ if __name__ == '__main__':
     nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
     nbd_spyder.get_historical_news()
 
-    tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
-    tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
 

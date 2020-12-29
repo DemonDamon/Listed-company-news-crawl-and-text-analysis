@@ -41,6 +41,11 @@ class StockInfoSpyder(Spyder):
         return stock_info_df
 
     def get_historical_news(self, start_date=None, end_date=None, freq="day"):
+        if start_date is None:
+
+            start_date = config.STOCK_PRICE_REQUEST_DEFAULT_DATE
+        if end_date is None:
+            end_date = datetime.datetime.now().strftime("%Y%m%d")
         stock_symbol_list = self.col_basic_info.distinct("symbol")
         if len(stock_symbol_list) == 0:
             stock_symbol_list = self.get_stock_code_info()
@@ -92,9 +97,10 @@ class StockInfoSpyder(Spyder):
 if __name__ == "__main__":
     stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
     stock_info_spyder.get_stock_code_info()
+
     # 指定时间段，获取历史数据
-    # stock_info_spyder.get_historical_news(start_date="20150101", end_date="20201204")
+    stock_info_spyder.get_historical_news(start_date="20150101", end_date="20201204")
     # 如果没有指定时间段，且数据库已存在部分数据，则从最新的数据时间开始获取直到现在，比如
     # 数据库里已有sh600000价格数据到2020-12-03号，如不设定具体时间，则从自动获取sh600000
     # 自2020-12-04至当前的价格数据
-    # stock_info_spyder.get_historical_news()
+    stock_info_spyder.get_historical_news()

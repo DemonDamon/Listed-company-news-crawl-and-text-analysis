@@ -5,6 +5,11 @@ from Kite import config
 from Gon.jrjspyder import JrjSpyder
 from Gon.cnstockspyder import CnStockSpyder
 from Gon.nbdspyder import NbdSpyder
+from Gon.stockinfospyder import StockInfoSpyder
+
+# stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
+# stock_info_spyder.get_stock_code_info()
+# stock_info_spyder.get_historical_news(start_date="20150101")
 
 # cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
 # for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
@@ -19,30 +24,33 @@ from Gon.nbdspyder import NbdSpyder
 # nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
 # nbd_spyder.get_historical_news(684)
 
-# 2. 抽取出新闻中所涉及的股票，并保存其股票代码在collection中新的一列
-from Leorio.tokenization import Tokenization
 
-tokenization = Tokenization(import_module="jieba", user_dict="./Leorio/financedict.txt")
-tokenization.update_news_database_rows(config.DATABASE_NAME, "cnstock")
+# # 2. 抽取出新闻中所涉及的股票，并保存其股票代码在collection中新的一列
+# from Leorio.tokenization import Tokenization
+#
+# tokenization = Tokenization(import_module="jieba", user_dict="./Leorio/financedict.txt")
+# tokenization.update_news_database_rows(config.DATABASE_NAME, "cnstock")
 # tokenization.update_news_database_rows(config.DATABASE_NAME, "nbd")
 # tokenization.update_news_database_rows(config.DATABASE_NAME, "jrj")
 
-# 3. 针对历史数据进行去重清洗
+
+# 2. 针对历史数据进行去重清洗
 from Killua.deduplication import Deduplication
 
-Deduplication("finnewshunter", "cnstock").run()
+# Deduplication("finnewshunter", "cnstock").run()
 # Deduplication("finnewshunter", "nbd").run()
 # Deduplication("finnewshunter", "jrj").run()  # 暂时只有jrj需要去重
 
 
-# 4. 将历史数据中包含null值的行去掉
+# 3. 将历史数据中包含null值的行去掉
 from Killua.denull import DeNull
 
 # DeNull("finnewshunter", "cnstock").run()
 # DeNull("finnewshunter", "nbd").run()
 # DeNull("finnewshunter", "jrj").run()
 
-# 5. 创建新的数据库，针对每一个股票，将所有涉及该股票的新闻都保存在新的数据库，并贴好"利好","利空"和"中性"标签
+
+# 4. 创建新的数据库，针对每一个股票，将所有涉及该股票的新闻都保存在新的数据库，并贴好"利好","利空"和"中性"标签
 from Killua.buildstocknewsdb import GenStockNewsDB
 # gen_stock_news_db = GenStockNewsDB()
 # gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "cnstock")
@@ -50,4 +58,4 @@ from Killua.buildstocknewsdb import GenStockNewsDB
 # gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "jrj")
 
 
-# 4.
+# 5.

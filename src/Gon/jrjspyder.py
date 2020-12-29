@@ -155,10 +155,13 @@ class JrjSpyder(Spyder):
                                             article_specific_date, article = result
                                         self.is_article_prob = .5
                                         if article != "":
+                                                related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
+                                                                                                                                  name_code_dict)
                                                 data = {"Date": article_specific_date,
                                                         "Url": a["href"],
                                                         "Title": a.string,
-                                                        "Article": article}
+                                                        "Article": article,
+                                                        "RelatedStockCodes": " ".join(related_stock_codes_list)}
                                                 # self.col.insert_one(data)
                                                 self.db_obj.insert_data(self.db_name, self.col_name, data)
                                                 logging.info("[SUCCESS] {} {} {}".format(article_specific_date,
@@ -275,8 +278,6 @@ class JrjSpyder(Spyder):
 #     jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
 #     jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, start_date="2015-01-01")
 #
-#     tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
-#     tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
 #     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
 #     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
 

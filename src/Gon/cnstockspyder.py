@@ -82,6 +82,10 @@ class CnStockSpyder(Spyder):
         logging.info("historical data length -> {} ... ".format(len(crawled_urls_list)))
         # crawled_urls_list = []
         driver.get(url)
+        name_code_df = self.db_obj.get_data(config.STOCK_DATABASE_NAME,
+                                            config.COLLECTION_NAME_STOCK_BASIC_INFO,
+                                            keys=["name", "code"])
+        name_code_dict = dict(name_code_df.values)
         if start_date is None:
             while btn_more_text != "没有更多":
                 more_btn = driver.find_element_by_id('j_more_btn')
@@ -147,11 +151,14 @@ class CnStockSpyder(Spyder):
                             date, article = result
                         self.is_article_prob = .5
                         if article != "":
+                            related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
+                                                                                                              name_code_dict)
                             data = {"Date": date,
                                     "Category": category_chn,
                                     "Url": a["href"],
                                     "Title": a["title"],
-                                    "Article": article}
+                                    "Article": article,
+                                    "RelatedStockCodes": " ".join(related_stock_codes_list)}
                             # self.col.insert_one(data)
                             self.db_obj.insert_data(self.db_name, self.col_name, data)
                             logging.info("[SUCCESS] {} {} {}".format(date, a["title"], a["href"]))
@@ -225,11 +232,14 @@ class CnStockSpyder(Spyder):
                             date, article = result
                         self.is_article_prob = .5
                         if article != "":
+                            related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
+                                                                                                              name_code_dict)
                             data = {"Date": date,
                                     "Category": category_chn,
                                     "Url": a["href"],
                                     "Title": a["title"],
-                                    "Article": article}
+                                    "Article": article,
+                                    "RelatedStockCodes": " ".join(related_stock_codes_list)}
                             # self.col.insert_one(data)
                             self.db_obj.insert_data(self.db_name, self.col_name, data)
                             logging.info("[SUCCESS] {} {} {}".format(date, a["title"], a["href"]))
@@ -340,8 +350,6 @@ class CnStockSpyder(Spyder):
 #         logging.info("finished ...")
 #         time.sleep(30)
 #
-#     tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
-#     tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
 #     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
 #     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
 
@@ -366,8 +374,6 @@ if __name__ == '__main__':
         latets_date_in_db = max(df[df.Category == type_chn]["Date"].to_list())
         cnstock_spyder.get_historical_news(url_to_be_crawled, category_chn=type_chn, start_date=latets_date_in_db)
 
-    tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
-    tokenization.update_news_database_rows(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
 
