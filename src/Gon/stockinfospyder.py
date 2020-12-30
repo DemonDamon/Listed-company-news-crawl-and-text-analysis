@@ -56,7 +56,7 @@ class StockInfoSpyder(Spyder):
             else:
                 start_stock_code = 0
             for symbol in stock_symbol_list:
-                if int(symbol[2:]) > 582:  # >= int(start_stock_code):
+                if int(symbol[2:]) >= int(start_stock_code):
                     try:
                         if start_date is None:
                             # 如果该symbol有历史数据，如果有则从API获取从数据库中最近的时间开始直到现在的所有价格数据
@@ -69,7 +69,6 @@ class StockInfoSpyder(Spyder):
                                 tmp_date_dt = datetime.datetime.strptime(tmp_date, "%Y-%m-%d").date()
                                 offset = datetime.timedelta(days=1)
                                 start_date = (tmp_date_dt + offset).strftime('%Y%m%d')
-                        # print("{} - {}".format(symbol, start_date))
                         stock_zh_a_daily_hfq_df = ak.stock_zh_a_daily(symbol=symbol,
                                                                       start_date=start_date,
                                                                       end_date=end_date,
