@@ -75,6 +75,10 @@ class JrjSpyder(Spyder):
         # logging.info("the length of crawled data from {} to {} is {} ... ".format(start_date,
         #                                                                           latest_date_str,
         #                                                                           len(crawled_urls_list)))
+        name_code_df = self.db_obj.get_data(config.STOCK_DATABASE_NAME,
+                                            config.COLLECTION_NAME_STOCK_BASIC_INFO,
+                                            keys=["name", "code"])
+        name_code_dict = dict(name_code_df.values)
 
         crawled_urls_list = []
         if end_date is None:

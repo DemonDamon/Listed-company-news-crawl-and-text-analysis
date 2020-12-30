@@ -8,8 +8,7 @@ from Gon.nbdspyder import NbdSpyder
 from Gon.stockinfospyder import StockInfoSpyder
 
 # stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
-# stock_info_spyder.get_stock_code_info()
-# stock_info_spyder.get_historical_news(start_date="20150101")
+# stock_info_spyder.get_historical_news()
 
 # cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
 # for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
