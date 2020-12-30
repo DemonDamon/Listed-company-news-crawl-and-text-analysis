@@ -55,26 +55,6 @@ class JrjSpyder(Spyder):
         return [date, article]
 
     def get_historical_news(self, url, start_date=None, end_date=None):
-        # # 抽取数据库中已爬取的从start_date到latest_date_str所有新闻，避免重复爬取
-        # # 比如数据断断续续爬到了2016-10-10 15:00:00时间节点，但是在没调整参数的情
-        # # 况下，从2015-01-01(自己设定)开始重跑程序会导致大量重复数据，因此在这里稍
-        # # 作去重。直接从最新的时间节点开始跑是完全没问题，但从2015-01-01(自己设定)
-        # # 开始重跑程序可以尝试将前面未成功爬取的URL重新再试一遍
-        # extracted_data_list = self.extract_data(["Date"])[0]
-        # if len(extracted_data_list) != 0:
-        #     latest_date_str = max(extracted_data_list).split(" ")[0]
-        # else:
-        #     latest_date_str = start_date
-        # logging.info("latest time in database is {} ... ".format(latest_date_str))
-        # crawled_urls_list = list()
-        # for _date in utils.get_date_list_from_range(start_date, latest_date_str):
-        #     query_results = self.query_news("Date", _date)
-        #     for qr in query_results:
-        #         crawled_urls_list.append(qr["Url"])
-        # # crawled_urls_list = self.extract_data(["Url"])[0]  # abandoned
-        # logging.info("the length of crawled data from {} to {} is {} ... ".format(start_date,
-        #                                                                           latest_date_str,
-        #                                                                           len(crawled_urls_list)))
         name_code_df = self.db_obj.get_data(config.STOCK_DATABASE_NAME,
                                             config.COLLECTION_NAME_STOCK_BASIC_INFO,
                                             keys=["name", "code"])
@@ -89,12 +69,16 @@ class JrjSpyder(Spyder):
             # e.g. history_latest_date_str -> "2020-12-08"
             #      history_latest_date_dt -> datetime.date(2020, 12, 08)
             #      start_date -> "2020-12-09"
-            history_latest_date_str = max(self.db_obj.get_data(self.db_name,
-                                                               self.col_name,
-                                                               keys=["Date"])["Date"].to_list()).split(" ")[0]
-            history_latest_date_dt = datetime.datetime.strptime(history_latest_date_str, "%Y-%m-%d").date()
-            offset = datetime.timedelta(days=1)
-            start_date = (history_latest_date_dt + offset).strftime('%Y-%m-%d')
+            history_latest_date_list = self.db_obj.get_data(self.db_name,
+                                                            self.col_name,
+                                                            keys=["Date"])["Date"].to_list()
+            if len(history_latest_date_list) != 0:
+                history_latest_date_str = max(history_latest_date_list).split(" ")[0]
+                history_latest_date_dt = datetime.datetime.strptime(history_latest_date_str, "%Y-%m-%d").date()
+                offset = datetime.timedelta(days=1)
+                start_date = (history_latest_date_dt + offset).strftime('%Y-%m-%d')
+            else:
+                start_date = config.JRJ_REQUEST_DEFAULT_DATE
 
         dates_list = utils.get_date_list_from_range(start_date, end_date)
         dates_separated_into_ranges_list = utils.gen_dates_list(dates_list, config.JRJ_DATE_RANGE)

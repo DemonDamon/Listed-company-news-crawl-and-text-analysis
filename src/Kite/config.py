@@ -22,6 +22,7 @@ JRJ_DATE_RANGE = 100
 WEBSITES_LIST_TO_BE_CRAWLED_JRJ = "http://stock.jrj.com.cn/xwk"
 RECORD_JRJ_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\jrj_failed_urls.txt"
 JRJ_MAX_REJECTED_AMOUNTS = 10
+JRJ_REQUEST_DEFAULT_DATE = "2015-01-01"
 
 COLLECTION_NAME_NBD = "nbd"
 WEBSITES_LIST_TO_BE_CRAWLED_NBD = "http://stocks.nbd.com.cn/columns/275/page"
