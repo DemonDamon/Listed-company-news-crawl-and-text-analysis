@@ -128,18 +128,18 @@ if __name__ == "__main__":
     # 指定时间段，获取历史数据，如：stock_info_spyder.get_historical_news(start_date="20150101", end_date="20201204")
     # 如果没有指定时间段，且数据库已存在部分数据，则从最新的数据时间开始获取直到现在，比如数据库里已有sh600000价格数据到
     # 2020-12-03号，如不设定具体时间，则从自动获取sh600000自2020-12-04至当前的价格数据
-    # stock_info_spyder.get_historical_news()
+    stock_info_spyder.get_historical_news()
 
-    from pymongo import MongoClient
-
-    db = MongoClient("localhost", 27017)
-    col_basic_info = db["stock"].get_collection("basic_info")
-    stock_symbol_list = col_basic_info.distinct("symbol")
-
-    for sym in stock_symbol_list:
-        _col = db["stock"].get_collection(sym)
-        for _ in _col.find():
-            _col.update_one(filter={"outstanding_share": {"$exists": True}}, update = {"$unset": {"outstanding_share": ""}},upsert = False)
-            _col.update_one(filter={"turnover": {"$exists": True}}, update = {"$unset": {"turnover": ""}}, upsert = False)
-        print("{} drop outstanding_share and turnover keys ... ".format(sym))
-    print("更新完毕")
+    # from pymongo import MongoClient
+    #
+    # db = MongoClient("localhost", 27017)
+    # col_basic_info = db["stock"].get_collection("basic_info")
+    # stock_symbol_list = col_basic_info.distinct("symbol")
+    #
+    # for sym in stock_symbol_list:
+    #     _col = db["stock"].get_collection(sym)
+    #     for _ in _col.find():
+    #         _col.update_one(filter={"outstanding_share": {"$exists": True}}, update = {"$unset": {"outstanding_share": ""}},upsert = False)
+    #         _col.update_one(filter={"turnover": {"$exists": True}}, update = {"$unset": {"turnover": ""}}, upsert = False)
+    #     print("{} drop outstanding_share and turnover keys ... ".format(sym))
+    # print("更新完毕")
