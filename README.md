@@ -76,13 +76,14 @@
  ## 更新日志
  
  - 更新[run_crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)代码为[stockinfospyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
-    - 例子
+    - example-1 爬取历史新闻数据，然后去重以及去NULL
     ```
-        """
-    Example-1:
-    爬取历史新闻数据
-    """
-    if __name__ == '__main__':
+        import time, logging
+        from Kite import config
+        from Killua.denull import DeNull
+        from Killua.deduplication import Deduplication 
+        from Gon.cnstockspyder import CnStockSpyder
+
         cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
         for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
             logging.info("start crawling {} ...".format(url_to_be_crawled))
@@ -92,9 +93,40 @@
     
         Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
         DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
-    
     ```
+    - example-2 实时更新新闻数据
+    ```
+        import time, logging, threading
+        from Kite import config
+        from Kite.database import Database
+        from Killua.denull import DeNull
+        from Killua.deduplication import Deduplication 
+        from Gon.cnstockspyder import CnStockSpyder
 
+        obj = Database()
+        df = obj.get_data(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK, keys=["Date", "Category"])
+    
+        cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+        # 先补充历史数据，比如已爬取数据到2020-12-01，但是启动实时爬取程序在2020-12-23，则先
+        # 自动补充爬取2020-12-02至2020-12-23的新闻数据
+        for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
+            # 查询type_chn的最近一条数据的时间
+            latets_date_in_db = max(df[df.Category == type_chn]["Date"].to_list())
+            cnstock_spyder.get_historical_news(url_to_be_crawled, category_chn=type_chn, start_date=latets_date_in_db)
+    
+        Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+        DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+    
+        # 开启多线程并行实时爬取
+        thread_list = []
+        for url, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
+            thread = threading.Thread(target=cnstock_spyder.get_realtime_news, args=(url, type_chn, 60))
+            thread_list.append(thread)
+        for thread in thread_list:
+            thread.start()
+        for thread in thread_list:
+            thread.join()
+    ```
  - 更新[run_crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_cnstock.py)代码为[cnstockspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/cnstockspyder.py)，直接运行即可获取中国证券网历史新闻数据，并可以实时更新采集
  - 更新[run_crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_jrj.py)代码为[jrjspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/jrjspyder.py)，直接运行即可获取金融界历史新闻数据，并可以实时更新采集
  - 更新[run_crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_nbd.py)代码为[nbdspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/nbdspyder.py)，直接运行即可获取每经网历史新闻数据，并可以实时更新采集
