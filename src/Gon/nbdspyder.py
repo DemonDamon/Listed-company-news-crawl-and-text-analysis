@@ -307,15 +307,10 @@ Example-2:
 爬取实时新闻数据
 """
 if __name__ == '__main__':
-    from Kite.database import Database
     from Kite import config
-
-    from Leorio.tokenization import Tokenization
 
     from Killua.denull import DeNull
     from Killua.deduplication import Deduplication
-
-    import threading
 
     # 如果没有历史数据从头爬取，如果已爬取历史数据，则从最新的时间开始爬取
     # 如历史数据中最近的新闻时间是"2020-12-09 20:37:10"，则从该时间开始爬取

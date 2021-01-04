@@ -76,11 +76,10 @@
  ## 更新日志
  
  - 更新[run_crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)代码为[stockinfospyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
-    - example 爬取股票历史价格数据，并开启实时更新
+    - example 调用[AkShare](https://www.akshare.xyz/zh_CN/latest/)接口获取股票历史价格数据，并开启实时更新
     ```
     from Kite import config
     from Gon.stockinfospyder import StockInfoSpyder
-
 
     stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
 
@@ -98,7 +97,6 @@
     from Killua.denull import DeNull
     from Killua.deduplication import Deduplication 
     from Gon.cnstockspyder import CnStockSpyder
-
 
     cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
     for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
@@ -118,7 +116,6 @@
     from Killua.denull import DeNull
     from Killua.deduplication import Deduplication 
     from Gon.cnstockspyder import CnStockSpyder
-
 
     obj = Database()
     df = obj.get_data(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK, keys=["Date", "Category"])
@@ -145,7 +142,57 @@
         thread.join()
     ```
  - 更新[run_crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_jrj.py)代码为[jrjspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/jrjspyder.py)，直接运行即可获取金融界历史新闻数据，并可以实时更新采集
+    - example-1 爬取历史新闻数据，然后去重以及去NULL
+    ```
+    from Kite import config
+    from Killua.denull import DeNull
+    from Killua.deduplication import Deduplication 
+    from Gon.jrjspyder import JrjSpyder
+
+    jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+    jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ, start_date="2015-01-01")
+
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
+    ```
+    - example-2 已爬取一定量的历史数据下，开启实时更新新闻数据
+    ```
+    from Kite import config
+    from Gon.jrjspyder import JrjSpyder
+
+    jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+    jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ)  # 补充爬虫数据到最新日期
+    jrj_spyder.get_realtime_news()
+    ```
  - 更新[run_crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_nbd.py)代码为[nbdspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/nbdspyder.py)，直接运行即可获取每经网历史新闻数据，并可以实时更新采集
+    - example-1 爬取历史新闻数据，然后去重以及去NULL
+    ```
+    from Kite import config
+    from Killua.denull import DeNull
+    from Killua.deduplication import Deduplication 
+    from Gon.nbdspyder import NbdSpyder
+
+    nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    nbd_spyder.get_historical_news(start_page=684)
+
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+    ```
+    - example-2 已爬取一定量的历史数据下，开启实时更新新闻数据
+    ```
+    from Kite import config
+    from Gon.nbdspyder import NbdSpyder
+
+    # 如果没有历史数据从头爬取，如果已爬取历史数据，则从最新的时间开始爬取
+    # 如历史数据中最近的新闻时间是"2020-12-09 20:37:10"，则从该时间开始爬取
+    nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    nbd_spyder.get_historical_news()
+
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+
+    nbd_spyder.get_realtime_news()
+    ```
  - 更新[run_crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_sina.py)代码为[sinaspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/sinaspyder.py)，直接运行即可获取新浪财经历史新闻数据(未更新)
  - 停止`证券时报网`爬虫代码的更新(旧代码已不可用)，新增`网易财经`和`凤凰财经`的爬虫代码(未更新)
  - 更新前使用jieba分词系统，在实体识别上需要不断维护新词表来提高识别精度；更新后，使用基于BERT预训练的FinBERT对金融领域实体进行识别
