@@ -74,7 +74,7 @@
  - `基础与Web服务模块`          -> [Kite](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Kite) -> `基础服务集，包括基本参数配置文件(.py)、数据库的构建与连接、日志打印与收集、多线程服务、Web服务框架搭建以及其他函数`)
  
  ## 更新日志
- (注意：需要在代码根目录[src](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src)执行)
+ 注意：下面example需要在代码根目录[src](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src)下执行
  
  - 更新[run_crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)代码为[stockinfospyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
     - example 调用[AkShare](https://www.akshare.xyz/zh_CN/latest/)接口获取股票历史价格数据，并开启实时更新
