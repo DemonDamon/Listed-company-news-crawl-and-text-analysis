@@ -75,7 +75,7 @@
  
  ## 更新日志
  
- - 更新`crawler_tushare.py`代码为[stockinfospyder.py](stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
+ - 更新`crawler_tushare.py`代码为[stockinfospyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
  - 更新`crawler_cnstock.py`代码为`cnstockspyder.py`，直接运行即可获取中国证券网历史新闻数据，并可以实时更新采集
  - 更新`crawler_jrj.py`代码为`jrjspyder.py`，直接运行即可获取金融界历史新闻数据，并可以实时更新采集
  - 更新`crawler_nbd.py`代码为`nbdspyder.py`，直接运行即可获取每经网历史新闻数据，并可以实时更新采集
