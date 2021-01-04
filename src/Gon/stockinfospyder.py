@@ -1,6 +1,7 @@
 """
-https://waditu.com/document/2
+https://www.akshare.xyz/zh_CN/latest/
 """
+
 import __init__
 
 import os

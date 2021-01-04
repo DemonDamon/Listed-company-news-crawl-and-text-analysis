@@ -29,20 +29,24 @@
  - requests==2.18.4
  - gevent==1.2.1
 
-## 文本处理(`text_processing.py`)
+## 文本处理([text_processing.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Text_Analysis/text_processing.py))
 
  - 文本处理包括去停用词处理、加载新词、中文分词、去掉出现次数少的分词
  - 生成字典和Bow向量，并基于Gensim转化模型（LSI、LDA、TF-IDF）转化Bow向量
  - 计算文本相似度
  - 打印词云
 
-## 文本挖掘（`text_mining.py`）
+## 文本挖掘（[text_mining.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Text_Analysis/text_mining.py)）
 
  - 从新闻文本中抽取特定信息，并贴上新的文本标签方便往后训练模型
  - 从数据库中抽取与某支股票相关的所有新闻文本
  - 将贴好标签的历史新闻进行分类训练，利用训练好的模型对实时抓取的新闻文本进行分类预测
 
-## 新闻爬取（`crawler_cnstock.py`，`crawler_jrj.py`，`crawler_nbd.py`，`crawler_sina.py`，`crawler_stcn.py`）
+## 新闻爬取（[crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_cnstock.py)，
+[crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_jrj.py)，
+[crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_nbd.py)，
+[crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_sina.py)，
+[crawler_stcn.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_stcn.py)）
 
  - 分析网站结构，多线程（或协程）爬取上市公司历史新闻数据
 
