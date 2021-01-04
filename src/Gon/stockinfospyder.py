@@ -5,6 +5,7 @@ import __init__
 
 import os
 import time
+import redis
 import logging
 import datetime
 from spyder import Spyder
@@ -33,8 +34,12 @@ class StockInfoSpyder(Spyder):
         self.database_name = database_name
         self.collection_name = collection_name
         self.start_program_date = datetime.datetime.now().strftime("%Y%m%d")
+        self.redis_client = redis.StrictRedis(host="localhost",
+                                              port=6379,
+                                              db=config.REDIS_CLIENT_FOR_CACHING_STOCK_INFO_DB_ID)
 
     def get_stock_code_info(self):
+        # TODO:每半年需要更新一次
         stock_info_df = ak.stock_info_a_code_name()  # 获取所有A股code和name
         stock_symbol_code = ak.stock_zh_a_spot().get(["symbol", "code"])  # 获取A股所有股票的symbol和code
         for _id in range(stock_info_df.shape[0]):
@@ -52,43 +57,45 @@ class StockInfoSpyder(Spyder):
             self.get_stock_code_info()
             stock_symbol_list = self.col_basic_info.distinct("symbol")
         if freq == "day":
-            if os.path.exists(config.STOCK_DAILY_EXCEPTION_TXT_FILE_PATH):
-                with open(config.STOCK_DAILY_EXCEPTION_TXT_FILE_PATH, "r") as file:
-                    start_stock_code = file.read()
-                logging.info("read {} to get start code number is {} ... "
-                             .format(config.STOCK_DAILY_EXCEPTION_TXT_FILE_PATH, start_stock_code))
-            else:
-                start_stock_code = 0
+            start_stock_code = 0 if self.redis_client.get("start_stock_code") is None else int(self.redis_client.get("start_stock_code").decode())
             for symbol in stock_symbol_list:
-                if int(symbol[2:]) > 603185: #>= int(start_stock_code):
-                    try:
-                        if start_date is None:
-                            # 如果该symbol有历史数据，如果有则从API获取从数据库中最近的时间开始直到现在的所有价格数据
-                            # 如果该symbol无历史数据，则从API获取从2015年1月1日开始直到现在的所有价格数据
-                            symbol_date_list = self.db_obj.get_data(self.database_name, symbol, keys=["date"])["date"].to_list()
-                            if len(symbol_date_list) == 0:
-                                start_date = config.STOCK_PRICE_REQUEST_DEFAULT_DATE
-                            else:
-                                tmp_date = str(max(symbol_date_list)).split(" ")[0]
-                                tmp_date_dt = datetime.datetime.strptime(tmp_date, "%Y-%m-%d").date()
-                                offset = datetime.timedelta(days=1)
-                                start_date = (tmp_date_dt + offset).strftime('%Y%m%d')
-                        stock_zh_a_daily_hfq_df = ak.stock_zh_a_daily(symbol=symbol,
-                                                                      start_date=start_date,
-                                                                      end_date=end_date,
-                                                                      adjust="qfq")
-                        stock_zh_a_daily_hfq_df.insert(0, 'date', stock_zh_a_daily_hfq_df.index.tolist())
-                        stock_zh_a_daily_hfq_df.index = range(len(stock_zh_a_daily_hfq_df))
-                        _col = self.db_obj.get_collection(self.database_name, symbol)
-                        for _id in range(stock_zh_a_daily_hfq_df.shape[0]):
-                            _tmp_dict = stock_zh_a_daily_hfq_df.iloc[_id].to_dict()
-                            _tmp_dict.pop("outstanding_share")
-                            _tmp_dict.pop("turnover")
-                            _col.insert_one(_tmp_dict)
-                        logging.info("{} finished saving ... ".format(symbol))
-                    except Exception:
-                        with open(config.STOCK_DAILY_EXCEPTION_TXT_FILE_PATH, "w") as file:
-                            file.write(symbol[2:])
+                if int(symbol[2:]) > start_stock_code:
+                    if start_date is None:
+                        # 如果该symbol有历史数据，如果有则从API获取从数据库中最近的时间开始直到现在的所有价格数据
+                        # 如果该symbol无历史数据，则从API获取从2015年1月1日开始直到现在的所有价格数据
+                        _latest_date = self.redis_client.get(symbol)
+                        if _latest_date is None:
+                            symbol_start_date = config.STOCK_PRICE_REQUEST_DEFAULT_DATE
+                        else:
+                            tmp_date_dt = datetime.datetime.strptime(_latest_date.decode(), "%Y-%m-%d").date()
+                            offset = datetime.timedelta(days=1)
+                            symbol_start_date = (tmp_date_dt + offset).strftime('%Y%m%d')
+
+                        # symbol_date_list = self.db_obj.get_data(self.database_name, symbol, keys=["date"])["date"].to_list()
+                        # if len(symbol_date_list) == 0:
+                        #     symbol_start_date = config.STOCK_PRICE_REQUEST_DEFAULT_DATE
+                        # else:
+                        #     tmp_date = str(max(symbol_date_list)).split(" ")[0]
+                        #     tmp_date_dt = datetime.datetime.strptime(tmp_date, "%Y-%m-%d").date()
+                        #     offset = datetime.timedelta(days=1)
+                        #     symbol_start_date = (tmp_date_dt + offset).strftime('%Y%m%d')
+
+                    stock_zh_a_daily_hfq_df = ak.stock_zh_a_daily(symbol=symbol,
+                                                                  start_date=symbol_start_date,
+                                                                  end_date=end_date,
+                                                                  adjust="qfq")
+                    stock_zh_a_daily_hfq_df.insert(0, 'date', stock_zh_a_daily_hfq_df.index.tolist())
+                    stock_zh_a_daily_hfq_df.index = range(len(stock_zh_a_daily_hfq_df))
+                    _col = self.db_obj.get_collection(self.database_name, symbol)
+                    for _id in range(stock_zh_a_daily_hfq_df.shape[0]):
+                        _tmp_dict = stock_zh_a_daily_hfq_df.iloc[_id].to_dict()
+                        _tmp_dict.pop("outstanding_share")
+                        _tmp_dict.pop("turnover")
+                        _col.insert_one(_tmp_dict)
+                        self.redis_client.set(symbol, str(_tmp_dict["date"]).split(" ")[0])
+
+                    logging.info("{} finished saving from {} to {} ... ".format(symbol, symbol_start_date, end_date))
+                self.redis_client.set("start_stock_code", int(symbol[2:]))
         elif freq == "week":
             pass
         elif freq == "month":
@@ -119,6 +126,7 @@ class StockInfoSpyder(Spyder):
                         _tmp_dict.update({"close": stock_zh_a_spot_df.iloc[_id].trade})
                         _tmp_dict.update({"volume": stock_zh_a_spot_df.iloc[_id].volume})
                         _col.insert_one(_tmp_dict)
+                        self.redis_client.set(sym, time_now.split(" ")[0])
                         logging.info("finished updating {} price data of {} ... ".format(symbol, time_now.split(" ")[0]))
 
 
@@ -129,17 +137,4 @@ if __name__ == "__main__":
     # 如果没有指定时间段，且数据库已存在部分数据，则从最新的数据时间开始获取直到现在，比如数据库里已有sh600000价格数据到
     # 2020-12-03号，如不设定具体时间，则从自动获取sh600000自2020-12-04至当前的价格数据
     stock_info_spyder.get_historical_news()
-
-    # from pymongo import MongoClient
-    #
-    # db = MongoClient("localhost", 27017)
-    # col_basic_info = db["stock"].get_collection("basic_info")
-    # stock_symbol_list = col_basic_info.distinct("symbol")
-    #
-    # for sym in stock_symbol_list:
-    #     _col = db["stock"].get_collection(sym)
-    #     for _ in _col.find():
-    #         _col.update_one(filter={"outstanding_share": {"$exists": True}}, update = {"$unset": {"outstanding_share": ""}},upsert = False)
-    #         _col.update_one(filter={"turnover": {"$exists": True}}, update = {"$unset": {"turnover": ""}}, upsert = False)
-    #     print("{} drop outstanding_share and turnover keys ... ".format(sym))
-    # print("更新完毕")
+    stock_info_spyder.get_realtime_news()
