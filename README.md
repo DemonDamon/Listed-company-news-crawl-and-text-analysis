@@ -75,11 +75,10 @@
  
  ## 更新日志
  
- - 更新`crawler_tushare.py`代码为`stockinfospyder.py`，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
+ - 更新`crawler_tushare.py`代码为[stockinfospyder.py](stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
  - 更新`crawler_cnstock.py`代码为`cnstockspyder.py`，直接运行即可获取中国证券网历史新闻数据，并可以实时更新采集
  - 更新`crawler_jrj.py`代码为`jrjspyder.py`，直接运行即可获取金融界历史新闻数据，并可以实时更新采集
  - 更新`crawler_nbd.py`代码为`nbdspyder.py`，直接运行即可获取每经网历史新闻数据，并可以实时更新采集
  - 更新`crawler_sina.py`代码为`sinaspyder.py`，直接运行即可获取新浪财经历史新闻数据(未更新)
  - 停止`证券时报网`爬虫代码的更新(旧代码已不可用)，新增`网易财经`和`凤凰财经`的爬虫代码(未更新)
  - 更新前使用jieba分词系统，在实体识别上需要不断维护新词表来提高识别精度；更新后，使用基于BERT预训练的FinBERT对金融领域实体进行识别
-
