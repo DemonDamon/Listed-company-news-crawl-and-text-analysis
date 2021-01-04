@@ -76,6 +76,25 @@
  ## 更新日志
  
  - 更新[run_crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)代码为[stockinfospyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
+    - 例子
+    ```
+        """
+    Example-1:
+    爬取历史新闻数据
+    """
+    if __name__ == '__main__':
+        cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+        for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
+            logging.info("start crawling {} ...".format(url_to_be_crawled))
+            cnstock_spyder.get_historical_news(url_to_be_crawled, category_chn=type_chn)
+            logging.info("finished ...")
+            time.sleep(30)
+    
+        Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+        DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+    
+    ```
+
  - 更新[run_crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_cnstock.py)代码为[cnstockspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/cnstockspyder.py)，直接运行即可获取中国证券网历史新闻数据，并可以实时更新采集
  - 更新[run_crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_jrj.py)代码为[jrjspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/jrjspyder.py)，直接运行即可获取金融界历史新闻数据，并可以实时更新采集
  - 更新[run_crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_nbd.py)代码为[nbdspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/nbdspyder.py)，直接运行即可获取每经网历史新闻数据，并可以实时更新采集

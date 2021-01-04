@@ -338,20 +338,20 @@ class CnStockSpyder(Spyder):
             time.sleep(interval)
 
 
-# """
-# Example-1:
-# 爬取历史新闻数据
-# """
-# if __name__ == '__main__':
-#     cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
-#     for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
-#         logging.info("start crawling {} ...".format(url_to_be_crawled))
-#         cnstock_spyder.get_historical_news(url_to_be_crawled, category_chn=type_chn)
-#         logging.info("finished ...")
-#         time.sleep(30)
-#
-#     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
-#     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+"""
+Example-1:
+爬取历史新闻数据
+"""
+if __name__ == '__main__':
+    cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+    for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
+        logging.info("start crawling {} ...".format(url_to_be_crawled))
+        cnstock_spyder.get_historical_news(url_to_be_crawled, category_chn=type_chn)
+        logging.info("finished ...")
+        time.sleep(30)
+
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
 
 
 """
