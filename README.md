@@ -29,37 +29,33 @@
  - requests==2.18.4
  - gevent==1.2.1
 
-## 文本处理([text_processing.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Text_Analysis/text_processing.py))
+## 文本处理 -> [text_processing.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Text_Analysis/text_processing.py)
 
  - 文本处理包括去停用词处理、加载新词、中文分词、去掉出现次数少的分词
  - 生成字典和Bow向量，并基于Gensim转化模型（LSI、LDA、TF-IDF）转化Bow向量
  - 计算文本相似度
  - 打印词云
 
-## 文本挖掘（[text_mining.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Text_Analysis/text_mining.py)）
+## 文本挖掘 -> [text_mining.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Text_Analysis/text_mining.py)
 
  - 从新闻文本中抽取特定信息，并贴上新的文本标签方便往后训练模型
  - 从数据库中抽取与某支股票相关的所有新闻文本
  - 将贴好标签的历史新闻进行分类训练，利用训练好的模型对实时抓取的新闻文本进行分类预测
 
-## 新闻爬取（[crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_cnstock.py)，
-[crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_jrj.py)，
-[crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_nbd.py)，
-[crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_sina.py)，
-[crawler_stcn.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_stcn.py)）
+## 新闻爬取 -> [crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_cnstock.py), [crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_jrj.py), [crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_nbd.py), [crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_sina.py), [crawler_stcn.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_stcn.py)
 
  - 分析网站结构，多线程（或协程）爬取上市公司历史新闻数据
 
-## Tushare数据提取（`crawler_tushare.py`）
+## Tushare数据提取 -> [crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)
 
  - 获取沪深所有股票的基本信息，包括股票代码、股票名称、所属行业、所属地区等
 
 ## 用法
 
  - 配好运行环境以及安装MongoDB，最好再安装一个MongoDB的可视化管理工具Studio 3T
- - 先运行`run_crawler_cnstock.py`，`run_crawler_jrj.py`，`run_crawler_nbd.py`，`run_crawler_sina.py`，`run_crawler_stcn.py`这5个py文件，而且可能因为对方服务器没有响应而重复多次运行这几个文件才能抓取大量的历史数据
- - 接着运行`run_crawler_tushare.py`从Tushare获取基本信息和股票价格
- - 最后运行`run_main.py`文件，其中有4个步骤，除了第1步初始化外，其他几步最好单独运行
+ - 先运行[crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_cnstock.py), [crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_jrj.py), [crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_nbd.py), [crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_sina.py), [crawler_stcn.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_stcn.py)这5个py文件，而且可能因为对方服务器没有响应而重复多次运行这几个文件才能抓取大量的历史数据
+ - 接着运行[crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)从Tushare获取基本信息和股票价格
+ - 最后运行[run_main.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_main.py)文件，其中有4个步骤，除了第1步初始化外，其他几步最好单独运行
  - 注意：所有程序都必须在文件所在目录下运行
 
 ## 更新目标
@@ -67,15 +63,15 @@
  由于之前的项目代码是在初学Python的时候写的，很多写法都是入门级别，因此为了提高整体项目的质量，除了优化代码细节和已有的功能模块之外，还加入了多个功能模块，来支撑未来更加智能化和个性化的金融分析与交易。
  - 完成初步构想，重构该项目，将项目分成8大模块，分别是`数据获取模块`，`数据清洗与预处理模块`，`大数据可视化模块`，`基于机器学习的文本挖掘模块`，`金融知识图谱构建模块`，`任务导向多轮对话模块`，`金融交易模块`，`通用服务模块`
  (备注：项目在完善之后会重新更名为`Finnews Hunter`，命名的来源是出于对`《全职猎人》`的喜爱，与项目本质的结合，其中`Finnews`是`Financial News`的简写。上面提到的8个模块，分别由`《全职猎人》`中的本人最喜爱的8位角色命名，分别是
- - `数据获取模块`               -> `Gon` -> `网页爬虫、各种数据源API调用等`
- - `数据清洗与预处理模块`       -> `Killua` -> `数据清洗、数据转换(数据采样、类型转换、归一化等)、数据描述(数据可视化)、特征选择与组合(熵增益和分支定界等)、特征抽取(主成分分析、线性判别分析等)`
- - `大数据可视化模块`           -> `Kurapika` -> `基于多个可视化模块进行封装，包括提供Web可视化界面`
- - `自然语言处理模块`           -> `Leorio` -> `中文分词、词性标注、实体识别`
- - `基于机器学习的文本挖掘模块` -> `Hisoka`  -> ``
- - `金融知识图谱构建模块`       -> `Chrollo` -> ``
- - `任务导向多轮对话模块`       -> `Illumi` -> ``
- - `金融交易模块`               -> `Feitan` -> ``
- - `基础与Web服务模块`          -> `Kite` -> `基础服务集，包括基本参数配置文件(.py)、数据库的构建与连接、日志打印与收集、多线程服务、Web服务框架搭建以及其他函数`)
+ - `数据获取模块`               -> [Gon](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Gon) -> `网页爬虫、各种数据源API调用等`
+ - `数据清洗与预处理模块`       -> [Killua](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Killua) -> `数据清洗、数据转换(数据采样、类型转换、归一化等)、数据描述(数据可视化)、特征选择与组合(熵增益和分支定界等)、特征抽取(主成分分析、线性判别分析等)`
+ - `大数据可视化模块`           -> [Kurapika](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Kurapika) -> `基于多个可视化模块进行封装，包括提供Web可视化界面`
+ - `自然语言处理模块`           -> [Leorio](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Leorio) -> `中文分词、词性标注、实体识别`
+ - `基于机器学习的文本挖掘模块` -> [Hisoka](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Hisoka)  -> ``
+ - `金融知识图谱构建模块`       -> [Chrollo](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Chrollo) -> ``
+ - `任务导向多轮对话模块`       -> [Illumi](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Illumi) -> ``
+ - `金融交易模块`               -> [Feitan](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Feitan) -> ``
+ - `基础与Web服务模块`          -> [Kite](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Kite) -> `基础服务集，包括基本参数配置文件(.py)、数据库的构建与连接、日志打印与收集、多线程服务、Web服务框架搭建以及其他函数`)
  
  ## 更新日志
  
