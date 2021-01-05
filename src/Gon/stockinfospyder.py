@@ -38,6 +38,15 @@ class StockInfoSpyder(Spyder):
         self.redis_client = redis.StrictRedis(host="localhost",
                                               port=6379,
                                               db=config.REDIS_CLIENT_FOR_CACHING_STOCK_INFO_DB_ID)
+        self.redis_client.set("today_date", datetime.datetime.now().strftime("%Y-%m-%d"))
+        while True:
+            if_updated = input("Has the stock price dataset been updated? (Y/N) \n")
+            if if_updated == "Y":
+                self.redis_client.set("is_today_updated", "1")
+                break
+            elif if_updated == "N":
+                self.redis_client.set("is_today_updated", "")
+                break
 
     def get_stock_code_info(self):
         # TODO:每半年需要更新一次
@@ -72,30 +81,22 @@ class StockInfoSpyder(Spyder):
                             offset = datetime.timedelta(days=1)
                             symbol_start_date = (tmp_date_dt + offset).strftime('%Y%m%d')
 
-                        # symbol_date_list = self.db_obj.get_data(self.database_name, symbol, keys=["date"])["date"].to_list()
-                        # if len(symbol_date_list) == 0:
-                        #     symbol_start_date = config.STOCK_PRICE_REQUEST_DEFAULT_DATE
-                        # else:
-                        #     tmp_date = str(max(symbol_date_list)).split(" ")[0]
-                        #     tmp_date_dt = datetime.datetime.strptime(tmp_date, "%Y-%m-%d").date()
-                        #     offset = datetime.timedelta(days=1)
-                        #     symbol_start_date = (tmp_date_dt + offset).strftime('%Y%m%d')
+                    if symbol_start_date < end_date:
+                        stock_zh_a_daily_hfq_df = ak.stock_zh_a_daily(symbol=symbol,
+                                                                      start_date=symbol_start_date,
+                                                                      end_date=end_date,
+                                                                      adjust="qfq")
+                        stock_zh_a_daily_hfq_df.insert(0, 'date', stock_zh_a_daily_hfq_df.index.tolist())
+                        stock_zh_a_daily_hfq_df.index = range(len(stock_zh_a_daily_hfq_df))
+                        _col = self.db_obj.get_collection(self.database_name, symbol)
+                        for _id in range(stock_zh_a_daily_hfq_df.shape[0]):
+                            _tmp_dict = stock_zh_a_daily_hfq_df.iloc[_id].to_dict()
+                            _tmp_dict.pop("outstanding_share")
+                            _tmp_dict.pop("turnover")
+                            _col.insert_one(_tmp_dict)
+                            self.redis_client.set(symbol, str(_tmp_dict["date"]).split(" ")[0])
 
-                    stock_zh_a_daily_hfq_df = ak.stock_zh_a_daily(symbol=symbol,
-                                                                  start_date=symbol_start_date,
-                                                                  end_date=end_date,
-                                                                  adjust="qfq")
-                    stock_zh_a_daily_hfq_df.insert(0, 'date', stock_zh_a_daily_hfq_df.index.tolist())
-                    stock_zh_a_daily_hfq_df.index = range(len(stock_zh_a_daily_hfq_df))
-                    _col = self.db_obj.get_collection(self.database_name, symbol)
-                    for _id in range(stock_zh_a_daily_hfq_df.shape[0]):
-                        _tmp_dict = stock_zh_a_daily_hfq_df.iloc[_id].to_dict()
-                        _tmp_dict.pop("outstanding_share")
-                        _tmp_dict.pop("turnover")
-                        _col.insert_one(_tmp_dict)
-                        self.redis_client.set(symbol, str(_tmp_dict["date"]).split(" ")[0])
-
-                    logging.info("{} finished saving from {} to {} ... ".format(symbol, symbol_start_date, end_date))
+                        logging.info("{} finished saving from {} to {} ... ".format(symbol, symbol_start_date, end_date))
                 self.redis_client.set("start_stock_code", int(symbol[2:]))
             self.redis_client.set("start_stock_code", 0)
         elif freq == "week":
@@ -116,24 +117,32 @@ class StockInfoSpyder(Spyder):
         while True:
             if freq == "day":
                 time_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                update_time = "{} {}".format(time_now.split(" ")[0], "15:30:00")
-                if time_now >= update_time:
-                    stock_zh_a_spot_df = ak.stock_zh_a_spot()  # 当天的日数据行情下载
-                    for _id, sym in enumerate(stock_zh_a_spot_df["symbol"]):
-                        _col = self.db_obj.get_collection(self.database_name, sym)
-                        _tmp_dict = {}
-                        _tmp_dict.update({"date": Timestamp("{} 00:00:00".format(time_now.split(" ")[0]))})
-                        _tmp_dict.update({"open": stock_zh_a_spot_df.iloc[_id].open})
-                        _tmp_dict.update({"high": stock_zh_a_spot_df.iloc[_id].high})
-                        _tmp_dict.update({"low": stock_zh_a_spot_df.iloc[_id].low})
-                        _tmp_dict.update({"close": stock_zh_a_spot_df.iloc[_id].trade})
-                        _tmp_dict.update({"volume": stock_zh_a_spot_df.iloc[_id].volume})
-                        _col.insert_one(_tmp_dict)
-                        self.redis_client.set(sym, time_now.split(" ")[0])
-                        logging.info("finished updating {} price data of {} ... ".format(symbol, time_now.split(" ")[0]))
+                if time_now.split(" ")[0] != self.redis_client.get("today_date").decode():
+                    self.redis_client.set("today_date", time_now.split(" ")[0])
+                    self.redis_client.set("is_today_updated", "")  # 过了凌晨，该参数设置回空，表示今天未进行数据更新
+                if not bool(self.redis_client.get("is_today_updated").decode()):
+                    update_time = "{} {}".format(time_now.split(" ")[0], "15:30:00")
+                    if time_now >= update_time:
+                        stock_zh_a_spot_df = ak.stock_zh_a_spot()  # 当天的日数据行情下载
+                        for _id, sym in enumerate(stock_zh_a_spot_df["symbol"]):
+                            _col = self.db_obj.get_collection(self.database_name, sym)
+                            _tmp_dict = {}
+                            _tmp_dict.update({"date": Timestamp("{} 00:00:00".format(time_now.split(" ")[0]))})
+                            _tmp_dict.update({"open": stock_zh_a_spot_df.iloc[_id].open})
+                            _tmp_dict.update({"high": stock_zh_a_spot_df.iloc[_id].high})
+                            _tmp_dict.update({"low": stock_zh_a_spot_df.iloc[_id].low})
+                            _tmp_dict.update({"close": stock_zh_a_spot_df.iloc[_id].trade})
+                            _tmp_dict.update({"volume": stock_zh_a_spot_df.iloc[_id].volume})
+                            _col.insert_one(_tmp_dict)
+                            self.redis_client.set(sym, time_now.split(" ")[0])
+                            logging.info("finished updating {} price data of {} ... ".format(sym, time_now.split(" ")[0]))
+                        self.redis_client.set("is_today_updated", "1")
 
 
 if __name__ == "__main__":
+    from Kite import config
+    from Gon.stockinfospyder import StockInfoSpyder
+
     stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
 
     # 指定时间段，获取历史数据，如：stock_info_spyder.get_historical_news(start_date="20150101", end_date="20201204")

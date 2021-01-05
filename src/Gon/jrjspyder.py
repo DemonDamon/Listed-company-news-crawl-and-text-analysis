@@ -31,6 +31,9 @@ class JrjSpyder(Spyder):
         self.db_name = database_name
         self.col_name = collection_name
         self.tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
+        self.redis_client = redis.StrictRedis(host="localhost",
+                                              port=6379,
+                                              db=0)
 
     def get_url_info(self, url, specific_date):
         try:
@@ -247,6 +250,7 @@ class JrjSpyder(Spyder):
                                                 "RelatedStockCodes": " ".join(related_stock_codes_list)}
                                         # self.col.insert_one(data)
                                         self.db_obj.insert_data(self.db_name, self.col_name, data)
+                                        # self.redis_client.set("jrj", )
                                         logging.info("[SUCCESS] {} {} {}".format(article_specific_date,
                                                                                  a.string,
                                                                                  a["href"]))
