@@ -77,17 +77,23 @@
  **注意：以下例子均需在代码根目录[src](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src)下执行**
  
  - 更新[run_crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)代码为[stockinfospyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
-    - example 调用[AkShare](https://www.akshare.xyz/zh_CN/latest/)接口获取股票历史价格数据，并开启实时更新
+    - example-1 调用[AkShare](https://www.akshare.xyz/zh_CN/latest/)接口获取股票历史价格数据，并开启实时更新
     ```
     from Kite import config
     from Gon.stockinfospyder import StockInfoSpyder
 
     stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
-
     # 指定时间段，获取历史数据，如：stock_info_spyder.get_historical_news(start_date="20150101", end_date="20201204")
     # 如果没有指定时间段，且数据库已存在部分数据，则从最新的数据时间开始获取直到现在，比如数据库里已有sh600000价格数据到
     # 2020-12-03号，如不设定具体时间，则从自动获取sh600000自2020-12-04至当前的价格数据
     stock_info_spyder.get_historical_news()
+    ```
+    - example-2 开启自动化更新所有股票价格数据(目前只支持在15:30分后更新日数据)
+    ```
+    from Kite import config
+    from Gon.stockinfospyder import StockInfoSpyder
+
+    stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
     stock_info_spyder.get_realtime_news()
     ```
  - 更新[run_crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_cnstock.py)代码为[cnstockspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/cnstockspyder.py)，直接运行即可获取中国证券网历史新闻数据，并可以实时更新采集

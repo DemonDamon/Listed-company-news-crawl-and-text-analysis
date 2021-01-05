@@ -97,6 +97,7 @@ class StockInfoSpyder(Spyder):
 
                     logging.info("{} finished saving from {} to {} ... ".format(symbol, symbol_start_date, end_date))
                 self.redis_client.set("start_stock_code", int(symbol[2:]))
+            self.redis_client.set("start_stock_code", 0)
         elif freq == "week":
             pass
         elif freq == "month":
@@ -111,6 +112,7 @@ class StockInfoSpyder(Spyder):
             pass
 
     def get_realtime_news(self, freq="day"):
+        self.get_historical_news()  # 对所有股票补充数据到最新
         while True:
             if freq == "day":
                 time_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -138,4 +140,6 @@ if __name__ == "__main__":
     # 如果没有指定时间段，且数据库已存在部分数据，则从最新的数据时间开始获取直到现在，比如数据库里已有sh600000价格数据到
     # 2020-12-03号，如不设定具体时间，则从自动获取sh600000自2020-12-04至当前的价格数据
     stock_info_spyder.get_historical_news()
+
+    # 开启自动化更新所有股票价格数据(目前只支持在15:30分后更新日数据)
     stock_info_spyder.get_realtime_news()
