@@ -204,4 +204,14 @@
     ```
  - 更新[run_crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_sina.py)代码为[sinaspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/sinaspyder.py)，直接运行即可获取新浪财经历史新闻数据(未更新)
  - 停止`证券时报网`爬虫代码的更新(旧代码已不可用)，新增`网易财经`和`凤凰财经`的爬虫代码(未更新)
+ - 构建每支股票对应的新闻数据库，并根据股价贴上3/5/10/15/30/60天标签，具体判断条件查看[buildstocknewsdb.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Killua/buildstocknewsdb.py)第111-116行
+     ```
+    from Kite import config
+    from Killua.buildstocknewsdb import GenStockNewsDB
+
+    gen_stock_news_db = GenStockNewsDB()
+    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+    ```
  - 更新前使用jieba分词系统，在实体识别上需要不断维护新词表来提高识别精度；更新后，使用基于BERT预训练的FinBERT对金融领域实体进行识别

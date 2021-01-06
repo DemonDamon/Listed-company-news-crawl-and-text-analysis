@@ -136,5 +136,7 @@ class GenStockNewsDB(object):
 
 if __name__ == "__main__":
     gen_stock_news_db = GenStockNewsDB()
-    gen_stock_news_db.get_all_news_about_specific_stock("finnewshunter", "cnstock")
+    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
 

@@ -39,7 +39,7 @@ REDIS_CLIENT_FOR_CACHING_STOCK_INFO_DB_ID = 1
 ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE = "stocknews"
 
 TOPIC_NUMBER = 200
-SMV_TUNED_PARAMTERS = {"kernel": ["rbf"], "gamma": [10, 20, 50, 100, 150, 200], "C": [10, 15, 20, 30, 50, 100]}
+SVM_TUNED_PARAMTERS = {"kernel": ["rbf"], "gamma": [10, 20, 50, 100, 150, 200], "C": [10, 15, 20, 30, 50, 100]}
 RDFOREST_TUNED_PARAMTERS = {"n_estimators": [1, 2, 3, 4, 5, 10],
                             "criterion": ["gini", "entropy"],
                             "max_features": ["auto", "sqrt"]}
