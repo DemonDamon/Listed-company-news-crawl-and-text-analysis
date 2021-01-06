@@ -75,6 +75,7 @@ class GenStockNewsDB(object):
         # 监听redis消息队列，当新的实时数据过来时，根据"RelatedStockCodes"字段，将新闻分别保存到对应的股票数据库
         # e.g.:缓存新的一条数据中，"RelatedStockCodes"字段数据为"603386 603003 600111 603568"，则将该条新闻分别
         # 都存进这四支股票对应的数据库中
+        crawled_url_today = set()
         while True:
             date_now = datetime.datetime.now().strftime("%Y-%m-%d")
             if date_now != self.redis_client.get("today_date").decode():

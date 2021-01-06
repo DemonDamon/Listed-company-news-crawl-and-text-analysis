@@ -14,19 +14,19 @@ WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK = {"https://company.cnstock.com/company/scp_
                                        "http://ggjd.cnstock.com/company/scp_ggjd/tjd_bbdj": "公告解读",
                                        "http://ggjd.cnstock.com/company/scp_ggjd/tjd_ggkx": "公告快讯",
                                        "https://ggjd.cnstock.com/company/scp_ggjd/tjd_sdlh": "利好公告"}
-RECORD_CNSTOCK_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\cnstock_failed_urls.txt"
+RECORD_CNSTOCK_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\cnstock_failed_urls.txt"
 CNSTOCK_MAX_REJECTED_AMOUNTS = 10
 
 COLLECTION_NAME_JRJ = "jrj"
 JRJ_DATE_RANGE = 100
 WEBSITES_LIST_TO_BE_CRAWLED_JRJ = "http://stock.jrj.com.cn/xwk"
-RECORD_JRJ_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\jrj_failed_urls.txt"
+RECORD_JRJ_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\jrj_failed_urls.txt"
 JRJ_MAX_REJECTED_AMOUNTS = 10
 JRJ_REQUEST_DEFAULT_DATE = "2015-01-01"
 
 COLLECTION_NAME_NBD = "nbd"
 WEBSITES_LIST_TO_BE_CRAWLED_NBD = "http://stocks.nbd.com.cn/columns/275/page"
-RECORD_NBD_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\nbd_failed_urls.txt"
+RECORD_NBD_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\nbd_failed_urls.txt"
 NBD_TOTAL_PAGES_NUM = 684
 NBD_MAX_REJECTED_AMOUNTS = 10
 
@@ -44,8 +44,8 @@ RDFOREST_TUNED_PARAMTERS = {"n_estimators": [1, 2, 3, 4, 5, 10],
                             "criterion": ["gini", "entropy"],
                             "max_features": ["auto", "sqrt"]}
 CLASSIFIER_SCORE_LIST = ["f1_weighted"]
-USER_DEFINED_DICT_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Leorio\\financedict.txt"
-CHN_STOP_WORDS_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Leorio\\chnstopwords.txt"
+USER_DEFINED_DICT_PATH = "D:\\workfiles\\Listed-company-news-crawl-and-text-analysis\\src\\Leorio\\financedict.txt"
+CHN_STOP_WORDS_PATH = "D:\\workfiles\\Listed-company-news-crawl-and-text-analysis\\src\\Leorio\\chnstopwords.txt"
 
 CACHE_NEWS_REDIS_DB_ID = 0
 CACHE_NEWS_LIST_NAME = "cache_news_waiting_for_classification"
