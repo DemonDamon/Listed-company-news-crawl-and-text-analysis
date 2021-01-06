@@ -119,7 +119,7 @@ class StockInfoSpyder(Spyder):
                 time_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 if time_now.split(" ")[0] != self.redis_client.get("today_date").decode():
                     self.redis_client.set("today_date", time_now.split(" ")[0])
-                    self.redis_client.set("is_today_updated", "")  # 过了凌晨，该参数设置回空，表示今天未进行数据更新
+                    self.redis_client.set("is_today_updated", "")  # 过了凌晨，该参数设置回空值，表示今天未进行数据更新
                 if not bool(self.redis_client.get("is_today_updated").decode()):
                     update_time = "{} {}".format(time_now.split(" ")[0], "15:30:00")
                     if time_now >= update_time:
