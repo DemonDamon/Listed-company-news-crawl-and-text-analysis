@@ -20,6 +20,8 @@ from Leorio.tokenization import Tokenization
 
 import re
 import time
+import json
+import redis
 import random
 import logging
 import threading
@@ -41,6 +43,9 @@ class CnStockSpyder(Spyder):
         self.db_name = database_name
         self.col_name = collection_name
         self.tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
+        self.redis_client = redis.StrictRedis(host="localhost",
+                                              port=6379,
+                                              db=0)
 
     def get_url_info(self, url):
         try:
@@ -324,14 +329,20 @@ class CnStockSpyder(Spyder):
                         if article != "":
                             related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
                                                                                                               name_code_dict)
-                            data = {"Date": date,
-                                    "Category": category_chn,
-                                    "Url": a["href"],
-                                    "Title": a["title"],
-                                    "Article": article,
-                                    "RelatedStockCodes": " ".join(related_stock_codes_list)}
-                            # self.col.insert_one(data)
-                            self.db_obj.insert_data(self.db_name, self.col_name, data)
+                            self.db_obj.insert_data(self.db_name, self.col_name,
+                                                    {"Date": date,
+                                                     "Category": category_chn,
+                                                     "Url": a["href"],
+                                                     "Title": a["title"],
+                                                     "Article": article,
+                                                     "RelatedStockCodes": " ".join(related_stock_codes_list)})
+                            self.redis_client.lpush(config.CACHE_NEWS_LIST_NAME, json.dumps(
+                                {"Date": date,
+                                 "Category": category_chn,
+                                 "Url": a["href"],
+                                 "Title": a["title"],
+                                 "Article": article,
+                                 "RelatedStockCodes": " ".join(related_stock_codes_list)}))
                             logging.info("[SUCCESS] {} {} {}".format(date, a["title"], a["href"]))
                             crawled_urls.append(a["href"])
             # logging.info("sleep {} secs then request {} again ... ".format(interval, url))

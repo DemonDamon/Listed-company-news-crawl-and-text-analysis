@@ -46,3 +46,5 @@ RDFOREST_TUNED_PARAMTERS = {"n_estimators": [1, 2, 3, 4, 5, 10],
 CLASSIFIER_SCORE_LIST = ["f1_weighted"]
 USER_DEFINED_DICT_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Leorio\\financedict.txt"
 CHN_STOP_WORDS_PATH = "D:\\workfiles\\gpu私有云代码备份\\Listed-company-news-crawl-and-text-analysis\\src\\Leorio\\chnstopwords.txt"
+
+CACHE_NEWS_LIST_NAME = "cache_news_waiting_for_classification"

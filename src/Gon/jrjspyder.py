@@ -13,6 +13,8 @@ from Kite.database import Database
 from Leorio.tokenization import Tokenization
 
 import time
+import json
+import redis
 import datetime
 import logging
 
@@ -243,14 +245,19 @@ class JrjSpyder(Spyder):
                                     if article != "":
                                         related_stock_codes_list = self.tokenization.find_relevant_stock_codes_in_article(article,
                                                                                                                           name_code_dict)
-                                        data = {"Date": article_specific_date,
-                                                "Url": a["href"],
-                                                "Title": a.string,
-                                                "Article": article,
-                                                "RelatedStockCodes": " ".join(related_stock_codes_list)}
-                                        # self.col.insert_one(data)
-                                        self.db_obj.insert_data(self.db_name, self.col_name, data)
-                                        # self.redis_client.set("jrj", )
+                                        self.db_obj.insert_data(self.db_name, self.col_name,
+                                                                {"Date": article_specific_date,
+                                                                 "Url": a["href"],
+                                                                 "Title": a.string,
+                                                                 "Article": article,
+                                                                 "RelatedStockCodes": " ".join(related_stock_codes_list)})
+                                        self.redis_client.lpush(config.CACHE_NEWS_LIST_NAME, json.dumps(
+                                            {"Date": article_specific_date,
+                                             "Url": a["href"],
+                                             "Title": a.string,
+                                             "Article": article,
+                                             "RelatedStockCodes": " ".join(related_stock_codes_list)}
+                                        ))
                                         logging.info("[SUCCESS] {} {} {}".format(article_specific_date,
                                                                                  a.string,
                                                                                  a["href"]))
