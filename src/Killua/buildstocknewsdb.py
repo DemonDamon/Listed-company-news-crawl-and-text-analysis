@@ -1,4 +1,7 @@
 import __init__
+
+import json
+import redis
 import logging
 import datetime
 import akshare as ak
@@ -24,6 +27,9 @@ class GenStockNewsDB(object):
                             15: "15DaysLabel",
                             30: "30DaysLabel",
                             60: "60DaysLabel"}
+        self.redis_client = redis.StrictRedis(host="localhost",
+                                              port=6379,
+                                              db=config.CACHE_NEWS_REDIS_DB_ID)
 
     def get_all_news_about_specific_stock(self, database_name, collection_name):
         # 获取collection_name的key值，看是否包含RelatedStockCodes，如果没有说明，没有做将新闻中所涉及的
@@ -33,8 +39,10 @@ class GenStockNewsDB(object):
             tokenization = Tokenization(import_module="jieba", user_dict="./Leorio/financedict.txt")
             tokenization.update_news_database_rows(database_name, collection_name)
         # 创建stock_code为名称的collection
-        stock_symbol_list = self.database.get_data("stock", "basic_info", keys=["symbol"])["symbol"].to_list()
-        col_names = self.database.connect_database("stocknews").list_collection_names(session=None)
+        stock_symbol_list = self.database.get_data(config.STOCK_DATABASE_NAME,
+                                                   config.COLLECTION_NAME_STOCK_BASIC_INFO,
+                                                   keys=["symbol"])["symbol"].to_list()
+        col_names = self.database.connect_database(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE).list_collection_names(session=None)
         for symbol in stock_symbol_list:
             if symbol not in col_names:
                 _collection = self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, symbol)
@@ -46,8 +54,7 @@ class GenStockNewsDB(object):
                         for label_days, key_name in self.label_range.items():
                             _tmp_res = self._label_news(
                                 datetime.datetime.strptime(row["Date"].split(" ")[0], "%Y-%m-%d"), symbol, label_days)
-                            if _tmp_res:
-                                _tmp_dict.update({key_name: _tmp_res})
+                            _tmp_dict.update({key_name: _tmp_res})
                         _data = {"Date": row["Date"],
                                  "Url": row["Url"],
                                  "Title": row["Title"],
@@ -61,6 +68,40 @@ class GenStockNewsDB(object):
                              .format(_tmp_num_stat, symbol, collection_name))
             else:
                 logging.info("{} has fetched all related news from {}...".format(symbol, collection_name))
+            break
+
+    def listen_redis_queue(self):
+        # 监听redis消息队列，当新的实时数据过来时，根据"RelatedStockCodes"字段，将新闻分别保存到对应的股票数据库
+        # e.g.:缓存新的一条数据中，"RelatedStockCodes"字段数据为"603386 603003 600111 603568"，则将该条新闻分别
+        # 都存进这四支股票对应的数据库中
+        # col_names = self.database.connect_database(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE).list_collection_names(session=None)
+        while True:
+            if self.redis_client.llen(config.CACHE_NEWS_LIST_NAME) != 0:
+                data = json.loads(self.redis_client.lindex(config.CACHE_NEWS_LIST_NAME, -1))
+                if data["RelatedStockCodes"] != "":
+                    for stock_code in data["RelatedStockCodes"].split(" "):
+                        symbol = "sh{}".format(stock_code) if stock_code[0] == "6" else "sz{}".format(stock_code)
+                        _collection = self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, symbol)
+                        _tmp_dict = {}
+                        for label_days, key_name in self.label_range.items():
+                            _tmp_res = self._label_news(
+                                datetime.datetime.strptime(data["Date"].split(" ")[0], "%Y-%m-%d"), symbol, label_days)
+                            _tmp_dict.update({key_name: _tmp_res})
+                        _data = {"Date": data["Date"],
+                                 "Url": data["Url"],
+                                 "Title": data["Title"],
+                                 "Article": data["Article"],
+                                 "OriDB": data["OriDB"],
+                                 "OriCOL": data["OriCOL"]}
+                        _data.update(_tmp_dict)
+                        # _collection.insert_one(_data)
+                        logging.info("the real-time fetched news {}, which was saved in [DB:{} - COL:{}] ...".format(data["Title"],
+                                                                                                                     config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE,
+                                                                                                                     symbol))
+                self.redis_client.rpop(config.CACHE_NEWS_LIST_NAME)
+                logging.info("now pop {} from redis queue of [DB:{} - KEY:{}] ... ".format(data["Title"],
+                                                                                           config.CACHE_NEWS_REDIS_DB_ID,
+                                                                                           config.CACHE_NEWS_LIST_NAME))
 
     def _label_news(self, date, symbol, n_days):
         """
@@ -131,12 +172,16 @@ class GenStockNewsDB(object):
             else:
                 return "中性"
         else:
-            return False
+            return ""
 
 
 if __name__ == "__main__":
-    gen_stock_news_db = GenStockNewsDB()
-    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
-    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
-    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+    from Kite import config
+    from Killua.buildstocknewsdb import GenStockNewsDB
 
+    gen_stock_news_db = GenStockNewsDB()
+    # gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+    # gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    # gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+
+    gen_stock_news_db.listen_redis_queue()

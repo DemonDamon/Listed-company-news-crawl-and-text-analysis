@@ -4,6 +4,7 @@
 """
 
 import __init__
+
 from spyder import Spyder
 
 from Kite import utils
@@ -35,7 +36,7 @@ class JrjSpyder(Spyder):
         self.tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
         self.redis_client = redis.StrictRedis(host="localhost",
                                               port=6379,
-                                              db=0)
+                                              db=config.CACHE_NEWS_REDIS_DB_ID)
 
     def get_url_info(self, url, specific_date):
         try:
@@ -256,7 +257,10 @@ class JrjSpyder(Spyder):
                                              "Url": a["href"],
                                              "Title": a.string,
                                              "Article": article,
-                                             "RelatedStockCodes": " ".join(related_stock_codes_list)}
+                                             "RelatedStockCodes": " ".join(related_stock_codes_list),
+                                             "OriDB": config.DATABASE_NAME,
+                                             "OriCOL": config.COLLECTION_NAME_JRJ
+                                             }
                                         ))
                                         logging.info("[SUCCESS] {} {} {}".format(article_specific_date,
                                                                                  a.string,
