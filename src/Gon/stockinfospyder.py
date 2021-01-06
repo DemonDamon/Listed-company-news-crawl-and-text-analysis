@@ -40,7 +40,7 @@ class StockInfoSpyder(Spyder):
                                               db=config.REDIS_CLIENT_FOR_CACHING_STOCK_INFO_DB_ID)
         self.redis_client.set("today_date", datetime.datetime.now().strftime("%Y-%m-%d"))
         while True:
-            if_updated = input("Has the stock price dataset been updated? (Y/N) \n")
+            if_updated = input("Has the stock price dataset been updated today? (Y/N) \n")
             if if_updated == "Y":
                 self.redis_client.set("is_today_updated", "1")
                 break
@@ -137,6 +137,7 @@ class StockInfoSpyder(Spyder):
                             self.redis_client.set(sym, time_now.split(" ")[0])
                             logging.info("finished updating {} price data of {} ... ".format(sym, time_now.split(" ")[0]))
                         self.redis_client.set("is_today_updated", "1")
+        #TODO:当更新股票价格数据后，接着应该更新股票新闻数据库标签
 
 
 if __name__ == "__main__":

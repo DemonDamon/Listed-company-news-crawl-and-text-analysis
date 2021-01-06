@@ -115,7 +115,7 @@
     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
     ```
-    - example-2 实时更新新闻数据
+    - example-2 实时更新新闻数据库，并且将新数据推进redis消息队列等待处理
     ```
     import time, logging, threading
     from Kite import config
@@ -162,7 +162,7 @@
     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
     ```
-    - example-2 已爬取一定量的历史数据下，开启实时更新新闻数据
+    - example-2 已爬取一定量的历史数据下，开启实时更新新闻数据库，并且将新数据推进redis消息队列等待处理
     ```
     from Kite import config
     from Gon.jrjspyder import JrjSpyder
@@ -185,7 +185,7 @@
     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
     ```
-    - example-2 已爬取一定量的历史数据下，开启实时更新新闻数据
+    - example-2 已爬取一定量的历史数据下，开启实时更新新闻数据库，并且将新数据推进redis消息队列等待处理
     ```
     from Kite import config
     from Killua.denull import DeNull
@@ -205,7 +205,8 @@
  - 更新[run_crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_sina.py)代码为[sinaspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/sinaspyder.py)，直接运行即可获取新浪财经历史新闻数据(未更新)
  - 停止`证券时报网`爬虫代码的更新(旧代码已不可用)，新增`网易财经`和`凤凰财经`的爬虫代码(未更新)
  - 如果已经在每经网、中国证券网和金融界爬取了一定量新闻文本，接下来就是针对每支股票构建对应的新闻数据库，并根据股价贴上3/5/10/15/30/60天标签，具体判断条件查看[buildstocknewsdb.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Killua/buildstocknewsdb.py)第111-116行注释
-     ```
+    - example-1 从历史新闻数据库中抽取、构建每支股票的新闻数据库，并贴上标签
+    ```
     from Kite import config
     from Killua.buildstocknewsdb import GenStockNewsDB
 
@@ -213,5 +214,13 @@
     gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
     gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
     gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+    ```
+    - example-2 监听redis消息队列，将新的数据分别存入与该新闻相关的所有股票新闻数据库中
+    ```
+    from Kite import config
+    from Killua.buildstocknewsdb import GenStockNewsDB
+
+    gen_stock_news_db = GenStockNewsDB()
+    gen_stock_news_db.listen_redis_queue()
     ```
  - 更新前使用jieba分词系统，在实体识别上需要不断维护新词表来提高识别精度；更新后，使用基于BERT预训练的FinBERT对金融领域实体进行识别
