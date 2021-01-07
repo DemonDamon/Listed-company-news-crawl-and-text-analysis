@@ -223,7 +223,7 @@
     gen_stock_news_db = GenStockNewsDB()
     gen_stock_news_db.listen_redis_queue()
     ```
- - 新增[realtime_spyder_startup.bat](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_spyder_startup.bat)同时以下程序:
+ - 新增[realtime_spyder_startup.bat](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_spyder_startup.bat)同时以下程序
     - 开启多个爬虫实例，包括[realtime_starter_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_starter_cnstock.py)、[realtime_starter_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_starter_jrj.py)、[realtime_starter_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_starter_nbd.py)等
     - 全股票数据更新代码[realtime_starter_stock_price.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_starter_stock_price.py)
     - 监听redis消息队列[realtime_starter_redis_queue.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_starter_redis_queue.py)

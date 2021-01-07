@@ -34,8 +34,8 @@ class NbdSpyder(Spyder):
         self.db_name = database_name
         self.col_name = collection_name
         self.tokenization = Tokenization(import_module="jieba", user_dict=config.USER_DEFINED_DICT_PATH)
-        self.redis_client = redis.StrictRedis(host="localhost",
-                                              port=6379,
+        self.redis_client = redis.StrictRedis(host=config.REDIS_IP,
+                                              port=config.REDIS_PORT,
                                               db=config.CACHE_NEWS_REDIS_DB_ID)
 
     def get_url_info(self, url):

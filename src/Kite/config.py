@@ -1,5 +1,7 @@
 MONGODB_IP = "localhost"
 MONGODB_PORT = 27017
+REDIS_IP = "localhost"
+REDIS_PORT = 6379
 THREAD_NUMS_FOR_SPYDER = 4
 
 DATABASE_NAME = "finnewshunter"
@@ -49,3 +51,6 @@ CHN_STOP_WORDS_PATH = "D:\\workfiles\\Listed-company-news-crawl-and-text-analysi
 
 CACHE_NEWS_REDIS_DB_ID = 0
 CACHE_NEWS_LIST_NAME = "cache_news_waiting_for_classification"
+
+CACHE_RECORED_OPENED_PYTHON_PROGRAM_DB_ID = 0
+CACHE_RECORED_OPENED_PYTHON_PROGRAM_VAR = "opened_python_scripts"

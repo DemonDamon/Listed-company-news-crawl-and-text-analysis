@@ -1,10 +1,18 @@
-import time, logging, threading
+import time
+import redis
+import logging
+import threading
 from Kite import config
 from Kite.database import Database
 from Killua.denull import DeNull
 from Killua.deduplication import Deduplication 
 from Gon.cnstockspyder import CnStockSpyder
 
+
+redis_client = redis.StrictRedis(config.REDIS_IP,
+                                 port=config.REDIS_PORT,
+                                 db=config.CACHE_RECORED_OPENED_PYTHON_PROGRAM_DB_ID)
+redis_client.lpush(config.CACHE_RECORED_OPENED_PYTHON_PROGRAM_VAR, "realtime_starter_cnstock.py")
 
 obj = Database()
 df = obj.get_data(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK, keys=["Date", "Category"])

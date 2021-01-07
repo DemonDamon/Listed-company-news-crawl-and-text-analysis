@@ -27,8 +27,8 @@ class GenStockNewsDB(object):
                             15: "15DaysLabel",
                             30: "30DaysLabel",
                             60: "60DaysLabel"}
-        self.redis_client = redis.StrictRedis(host="localhost",
-                                              port=6379,
+        self.redis_client = redis.StrictRedis(host=config.REDIS_IP,
+                                              port=config.REDIS_PORT,
                                               db=config.CACHE_NEWS_REDIS_DB_ID)
         self.redis_client.set("today_date", datetime.datetime.now().strftime("%Y-%m-%d"))
 
