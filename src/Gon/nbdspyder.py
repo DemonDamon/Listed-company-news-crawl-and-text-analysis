@@ -221,21 +221,25 @@ class NbdSpyder(Spyder):
                                             config.COLLECTION_NAME_STOCK_BASIC_INFO,
                                             keys=["name", "code"])
         name_code_dict = dict(name_code_df.values)
-        crawled_urls = []
+        # crawled_urls = []
         date_list = self.db_obj.get_data(self.db_name, self.col_name, keys=["Date"])["Date"].to_list()
         latest_date = max(date_list)
         while True:
             # 每隔一定时间轮询该网址
-            if len(crawled_urls) > 100:
-                # 防止list过长，内存消耗大，维持list在100条
-                crawled_urls.pop(0)
+            # if len(crawled_urls) > 100:
+            #     # 防止list过长，内存消耗大，维持list在100条
+            #     crawled_urls.pop(0)
+            if self.redis_client.llen(config.CACHE_SAVED_NEWS_NBD_TODAY_VAR_NAME) > 100:
+                # 防止缓存list过长，内存消耗大，维持list在100条
+                self.redis_client.rpop(config.CACHE_SAVED_NEWS_NBD_TODAY_VAR_NAME)
             bs = utils.html_parser(page_url)
             a_list = bs.find_all("a")
             for a in a_list:
                 if "click-statistic" in a.attrs and a.string \
                         and a["click-statistic"].find("Article_") != -1 \
                         and a["href"].find("http://www.nbd.com.cn/articles/") != -1:
-                    if a["href"] not in crawled_urls:
+                    # if a["href"] not in crawled_urls:
+                    if a["href"] not in self.redis_client.lrange(config.CACHE_SAVED_NEWS_NBD_TODAY_VAR_NAME, 0, -1):
                         result = self.get_url_info(a["href"])
                         while not result:
                             self.terminated_amount += 1
@@ -300,7 +304,8 @@ class NbdSpyder(Spyder):
                                          "OriCOL": config.COLLECTION_NAME_NBD
                                          }
                                     ))
-                                    crawled_urls.append(a["href"])
+                                    # crawled_urls.append(a["href"])
+                                    self.redis_client.lpush(config.CACHE_SAVED_NEWS_NBD_TODAY_VAR_NAME, a["href"])
                                     logging.info("[SUCCESS] {} {} {}".format(date, a.string, a["href"]))
             # logging.info("sleep {} secs then request again ... ".format(interval))
             time.sleep(interval)
@@ -318,24 +323,24 @@ class NbdSpyder(Spyder):
 #     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
 
 
-# """
-# Example-2:
-# 爬取实时新闻数据
-# """
-# if __name__ == '__main__':
-#     from Kite import config
-#
-#     from Killua.denull import DeNull
-#     from Killua.deduplication import Deduplication
-#
-#     from Gon.nbdspyder import NbdSpyder
-#
-#     # 如果没有历史数据从头爬取，如果已爬取历史数据，则从最新的时间开始爬取
-#     # 如历史数据中最近的新闻时间是"2020-12-09 20:37:10"，则从该时间开始爬取
-#     nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
-#     nbd_spyder.get_historical_news()
-#
-#     Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
-#     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
-#
-#     nbd_spyder.get_realtime_news()
+"""
+Example-2:
+爬取实时新闻数据
+"""
+if __name__ == '__main__':
+    from Kite import config
+
+    from Killua.denull import DeNull
+    from Killua.deduplication import Deduplication
+
+    from Gon.nbdspyder import NbdSpyder
+
+    # 如果没有历史数据从头爬取，如果已爬取历史数据，则从最新的时间开始爬取
+    # 如历史数据中最近的新闻时间是"2020-12-09 20:37:10"，则从该时间开始爬取
+    nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    nbd_spyder.get_historical_news()
+
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+
+    nbd_spyder.get_realtime_news()

@@ -25,13 +25,14 @@ WEBSITES_LIST_TO_BE_CRAWLED_JRJ = "http://stock.jrj.com.cn/xwk"
 RECORD_JRJ_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\jrj_failed_urls.txt"
 JRJ_MAX_REJECTED_AMOUNTS = 10
 JRJ_REQUEST_DEFAULT_DATE = "2015-01-01"
-CACHE_SAVED_NEWS_TODAY_VAR_NAME = "cache_news_queue_jrj"
+CACHE_SAVED_NEWS_JRJ_TODAY_VAR_NAME = "cache_news_queue_jrj"
 
 COLLECTION_NAME_NBD = "nbd"
 WEBSITES_LIST_TO_BE_CRAWLED_NBD = "http://stocks.nbd.com.cn/columns/275/page"
 RECORD_NBD_FAILED_URL_TXT_FILE_PATH = "D:\\workfiles\\Listed-company-news-crawl-and-text-analysis\\src\\Gon\\nbd_failed_urls.txt"
 NBD_TOTAL_PAGES_NUM = 684
 NBD_MAX_REJECTED_AMOUNTS = 10
+CACHE_SAVED_NEWS_NBD_TODAY_VAR_NAME = "cache_news_queue_nbd"
 
 TUSHARE_TOKEN = "97fbc4c73727b5d171ca6670cbc4af8b0a3de5fbab74b52f30b598cc"
 STOCK_DATABASE_NAME = "stock"

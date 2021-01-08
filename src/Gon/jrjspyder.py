@@ -181,8 +181,8 @@ class JrjSpyder(Spyder):
             if is_change_date:
                 # crawled_urls_list = []
                 utils.batch_lpop(self.redis_client,
-                                 config.CACHE_SAVED_NEWS_TODAY_VAR_NAME,
-                                 self.redis_client.llen(config.CACHE_SAVED_NEWS_TODAY_VAR_NAME))
+                                 config.CACHE_SAVED_NEWS_JRJ_TODAY_VAR_NAME,
+                                 self.redis_client.llen(config.CACHE_SAVED_NEWS_JRJ_TODAY_VAR_NAME))
                 is_change_date = False
             _url = "{}/{}/{}_1.shtml".format(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ,
                                              today_date.replace("-", "")[0:6],
@@ -200,7 +200,7 @@ class JrjSpyder(Spyder):
                             a["href"].find("/{}/{}/".format(today_date.replace("-", "")[:4],
                                                             today_date.replace("-", "")[4:6])) != -1:
                         # if a["href"] not in crawled_urls_list:
-                        if a["href"] not in self.redis_client.lrange(config.CACHE_SAVED_NEWS_TODAY_VAR_NAME, 0, -1):
+                        if a["href"] not in self.redis_client.lrange(config.CACHE_SAVED_NEWS_JRJ_TODAY_VAR_NAME, 0, -1):
                             # 如果标题不包含"收盘","报于"等字样，即可写入数据库，因为包含这些字样标题的新闻多为机器自动生成
                             if a.string.find("收盘") == -1 and a.string.find("报于") == -1 and \
                                     a.string.find("新三板挂牌上市") == -1:
@@ -273,7 +273,7 @@ class JrjSpyder(Spyder):
                             else:
                                 logging.info("[QUIT] {}".format(a.string))
                             # crawled_urls_list.append(a["href"])
-                            self.redis_client.lpush(config.CACHE_SAVED_NEWS_TODAY_VAR_NAME, a["href"])
+                            self.redis_client.lpush(config.CACHE_SAVED_NEWS_JRJ_TODAY_VAR_NAME, a["href"])
             # logging.info("sleep {} secs then request again ... ".format(interval))
             time.sleep(interval)
 
