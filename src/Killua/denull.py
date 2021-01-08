@@ -33,4 +33,9 @@ class DeNull(object):
 
 
 if __name__ == "__main__":
-    DeNull("finnewshunter", "nbd").run()
+    from Killua.denull import DeNull
+    from Kite import config
+
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+    DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()

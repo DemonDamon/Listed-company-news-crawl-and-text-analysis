@@ -40,14 +40,18 @@ class Deduplication(object):
             for _id in list(set(data_df["_id"]) - set(data_df_drop_duplicate["_id"])):
                 collection.delete_one({'_id': _id})
                 self.delete_num += 1
-            logging.info("{} finished ... ".format(_date))
+            # logging.info("{} finished ... ".format(_date))
         logging.info("DB:{} - COL:{} had {} data length originally, now has deleted {} depulications ... "
                      .format(self.database_name, self.collection_name, str(len(date_list)), self.delete_num))
 
 
 if __name__ == "__main__":
-    Deduplication("finnewshunter", "jrj").run()
-    Deduplication("stock", "basic_info").run()
+    from Killua.deduplication import Deduplication
+    from Kite import config
+
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK).run()
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+    Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
 
 
 

@@ -256,21 +256,6 @@ class CnStockSpyder(Spyder):
     def get_realtime_news(self, url, category_chn=None, interval=60):
         logging.info("start real-time crawling of URL -> {}, request every {} secs ... ".format(url, interval))
         assert category_chn is not None
-        # today_date = time.strftime("%Y-%m-%d", time.localtime(time.time()))
-        # last_date = utils.get_date_before(1)
-        # last_2_date = utils.get_date_before(2)
-        # latest_3_days_crawled_href = self.db_obj.get_data(self.db_name,
-        #                                                   self.col_name,
-        #                                                   query={"Date": {"$regex": today_date}},
-        #                                                   keys=["Url"])["Url"].to_list()
-        # latest_3_days_crawled_href.extend(self.db_obj.get_data(self.db_name,
-        #                                                        self.col_name,
-        #                                                        query={"Date": {"$regex": last_date}},
-        #                                                        keys=["Url"])["Url"].to_list())
-        # latest_3_days_crawled_href.extend(self.db_obj.get_data(self.db_name,
-        #                                                        self.col_name,
-        #                                                        query={"Date": {"$regex": last_2_date}},
-        #                                                        keys=["Url"])["Url"].to_list())
         # TODO: 由于cnstock爬取的数据量并不大，这里暂时是抽取历史所有数据进行去重，之后会修改去重策略
         name_code_df = self.db_obj.get_data(config.STOCK_DATABASE_NAME,
                                             config.COLLECTION_NAME_STOCK_BASIC_INFO,
