@@ -165,3 +165,10 @@ def is_contain_chn(word):
         return True
     else:
         return False
+
+
+def batch_lpop(client, key, n):
+    p = client.pipeline()
+    p.lrange(key, 0, n-1)
+    p.ltrim(key, n, -1)
+    p.execute()

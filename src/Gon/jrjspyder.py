@@ -170,7 +170,7 @@ class JrjSpyder(Spyder):
                                             config.COLLECTION_NAME_STOCK_BASIC_INFO,
                                             keys=["name", "code"])
         name_code_dict = dict(name_code_df.values)
-        crawled_urls_list = []
+        # crawled_urls_list = []
         is_change_date = False
         last_date = datetime.datetime.now().strftime("%Y-%m-%d")
         while True:
@@ -179,7 +179,10 @@ class JrjSpyder(Spyder):
                 is_change_date = True
                 last_date = today_date
             if is_change_date:
-                crawled_urls_list = []
+                # crawled_urls_list = []
+                utils.batch_lpop(self.redis_client,
+                                 config.CACHE_SAVED_NEWS_TODAY_VAR_NAME,
+                                 self.redis_client.llen(config.CACHE_SAVED_NEWS_TODAY_VAR_NAME))
                 is_change_date = False
             _url = "{}/{}/{}_1.shtml".format(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ,
                                              today_date.replace("-", "")[0:6],
@@ -196,7 +199,8 @@ class JrjSpyder(Spyder):
                     if "href" in a.attrs and a.string and \
                             a["href"].find("/{}/{}/".format(today_date.replace("-", "")[:4],
                                                             today_date.replace("-", "")[4:6])) != -1:
-                        if a["href"] not in crawled_urls_list:
+                        # if a["href"] not in crawled_urls_list:
+                        if a["href"] not in self.redis_client.lrange(config.CACHE_SAVED_NEWS_TODAY_VAR_NAME, 0, -1):
                             # 如果标题不包含"收盘","报于"等字样，即可写入数据库，因为包含这些字样标题的新闻多为机器自动生成
                             if a.string.find("收盘") == -1 and a.string.find("报于") == -1 and \
                                     a.string.find("新三板挂牌上市") == -1:
@@ -268,7 +272,8 @@ class JrjSpyder(Spyder):
                                 self.terminated_amount = 0  # 爬取结束后重置该参数
                             else:
                                 logging.info("[QUIT] {}".format(a.string))
-                            crawled_urls_list.append(a["href"])
+                            # crawled_urls_list.append(a["href"])
+                            self.redis_client.lpush(config.CACHE_SAVED_NEWS_TODAY_VAR_NAME, a["href"])
             # logging.info("sleep {} secs then request again ... ".format(interval))
             time.sleep(interval)
 
@@ -285,14 +290,14 @@ class JrjSpyder(Spyder):
 #     DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ).run()
 
 
-# """
-# Example-2:
-# 爬取实时新闻数据
-# """
-# if __name__ == '__main__':
-#     from Kite import config
-#     from Gon.jrjspyder import JrjSpyder
-#
-#     jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
-#     jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ)  # 补充爬虫数据到最新日期
-#     jrj_spyder.get_realtime_news()
+"""
+Example-2:
+爬取实时新闻数据
+"""
+if __name__ == '__main__':
+    from Kite import config
+    from Gon.jrjspyder import JrjSpyder
+
+    jrj_spyder = JrjSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+    jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ)  # 补充爬虫数据到最新日期
+    jrj_spyder.get_realtime_news()
