@@ -1,5 +1,9 @@
+import __init__
+
 import redis
+
 from Kite import config
+
 from Gon.jrjspyder import JrjSpyder
 
 

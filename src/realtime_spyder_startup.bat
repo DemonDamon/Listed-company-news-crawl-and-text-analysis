@@ -1,3 +1,4 @@
+cd ./Gon
 start python ./realtime_starter_redis_queue.py
 start python ./realtime_starter_cnstock.py
 start python ./realtime_starter_nbd.py

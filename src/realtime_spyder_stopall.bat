@@ -1,1 +1,2 @@
-start python ./kill_tasks.py
+cd ./Gon
+start python ./kill_realtime_spyder_tasks.py

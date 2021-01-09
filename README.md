@@ -99,7 +99,8 @@
  - 更新[crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_cnstock.py)代码为[cnstockspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/cnstockspyder.py)，直接运行即可获取中国证券网历史新闻数据，并可以实时更新采集
     - example-1 爬取历史新闻数据，然后去重以及去NULL
     ```
-    import time, logging
+    import time
+    import logging
     from Kite import config
     from Killua.denull import DeNull
     from Killua.deduplication import Deduplication 

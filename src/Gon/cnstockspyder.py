@@ -344,6 +344,13 @@ class CnStockSpyder(Spyder):
 # 爬取历史新闻数据
 # """
 # if __name__ == '__main__':
+#     import time
+#     import logging
+#     from Kite import config
+#     from Killua.denull import DeNull
+#     from Killua.deduplication import Deduplication
+#     from Gon.cnstockspyder import CnStockSpyder
+#
 #     cnstock_spyder = CnStockSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
 #     for url_to_be_crawled, type_chn in config.WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK.items():
 #         logging.info("start crawling {} ...".format(url_to_be_crawled))

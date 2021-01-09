@@ -1,11 +1,16 @@
+import __init__
+
 import time
 import redis
 import logging
 import threading
+
 from Kite import config
 from Kite.database import Database
+
 from Killua.denull import DeNull
 from Killua.deduplication import Deduplication 
+
 from Gon.cnstockspyder import CnStockSpyder
 
 

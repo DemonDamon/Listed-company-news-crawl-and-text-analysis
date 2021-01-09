@@ -39,14 +39,6 @@ class StockInfoSpyder(Spyder):
                                               port=6379,
                                               db=config.REDIS_CLIENT_FOR_CACHING_STOCK_INFO_DB_ID)
         self.redis_client.set("today_date", datetime.datetime.now().strftime("%Y-%m-%d"))
-        while True:
-            if_updated = input("Has the stock price dataset been updated today? (Y/N) \n")
-            if if_updated == "Y":
-                self.redis_client.set("is_today_updated", "1")
-                break
-            elif if_updated == "N":
-                self.redis_client.set("is_today_updated", "")
-                break
 
     def get_stock_code_info(self):
         # TODO:每半年需要更新一次
@@ -113,6 +105,14 @@ class StockInfoSpyder(Spyder):
             pass
 
     def get_realtime_news(self, freq="day"):
+        while True:
+            if_updated = input("Has the stock price dataset been updated today? (Y/N) \n")
+            if if_updated == "Y":
+                self.redis_client.set("is_today_updated", "1")
+                break
+            elif if_updated == "N":
+                self.redis_client.set("is_today_updated", "")
+                break
         self.get_historical_news()  # 对所有股票补充数据到最新
         while True:
             if freq == "day":

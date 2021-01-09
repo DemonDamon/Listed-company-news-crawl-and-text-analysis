@@ -1,3 +1,5 @@
+import __init__
+
 import os
 import wmi
 import redis

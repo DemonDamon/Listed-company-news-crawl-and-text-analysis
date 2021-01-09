@@ -1,5 +1,9 @@
+import __init__
+
 import redis
+
 from Kite import config
+
 from Gon.stockinfospyder import StockInfoSpyder
 
 
