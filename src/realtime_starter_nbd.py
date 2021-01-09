@@ -15,7 +15,7 @@ redis_client.lpush(config.CACHE_RECORED_OPENED_PYTHON_PROGRAM_VAR, "realtime_sta
 nbd_spyder = NbdSpyder(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
 nbd_spyder.get_historical_news()
 
-Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
-DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+# Deduplication(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
+# DeNull(config.DATABASE_NAME, config.COLLECTION_NAME_NBD).run()
 
 nbd_spyder.get_realtime_news()
