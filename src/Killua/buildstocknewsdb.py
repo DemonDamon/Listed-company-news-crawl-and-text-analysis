@@ -46,6 +46,7 @@ class GenStockNewsDB(object):
         # col_names = self.database.connect_database(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE).list_collection_names(session=None)
         for symbol in stock_symbol_list:
             # if symbol not in col_names:
+            if int(symbol[2:]) > 837:
                 _collection = self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, symbol)
                 _tmp_num_stat = 0
                 for row in self.database.get_collection(database_name, collection_name).find():  # 迭代器
@@ -187,8 +188,8 @@ if __name__ == "__main__":
     from Killua.buildstocknewsdb import GenStockNewsDB
 
     gen_stock_news_db = GenStockNewsDB()
-    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
-    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
+    # gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
+    # gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
     gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
 
     # gen_stock_news_db.listen_redis_queue()

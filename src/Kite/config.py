@@ -7,7 +7,6 @@ THREAD_NUMS_FOR_SPYDER = 4
 DATABASE_NAME = "finnewshunter"
 
 COLLECTION_NAME_CNSTOCK = "cnstock"
-# CHROME_DRIVER = "D:\\anaconda3\\chromedriver.exe"
 CHROME_DRIVER = "./chromedriver.exe"
 # WEBSITES_LIST_TO_BE_CRAWLED_CNSTOCK = {"https://company.cnstock.com/company/scp_gsxw": "公司聚焦",
 #                                        "https://ggjd.cnstock.com/gglist/search/qmtbbdj": "公告解读",
