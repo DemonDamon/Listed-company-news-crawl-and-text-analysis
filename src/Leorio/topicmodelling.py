@@ -58,7 +58,7 @@ class TopicModelling(object):
         _dict.compactify()
         if is_saved and save_path:
             _dict.save(save_path)
-            logging.info("new generated dictionary saved in path -> {} ...".format(ori_dict_path))
+            logging.info("new generated dictionary saved in path -> {} ...".format(save_path))
 
         return _dict, documents_token_list
 
@@ -158,8 +158,9 @@ class TopicModelling(object):
         Y = []
         for row in self.database.get_collection(database_name, collection_name).find():
             if label_name in row.keys():
-                historical_raw_documents_list.append(row["Article"])
-                Y.append(row[label_name])
+                if row[label_name] != "":
+                    historical_raw_documents_list.append(row["Article"])
+                    Y.append(row[label_name])
         logging.info("fetch symbol '{}' historical news with label '{}' from [DB:'{}' - COL:'{}'] ... "
                      .format(collection_name, label_name, database_name, collection_name))
 

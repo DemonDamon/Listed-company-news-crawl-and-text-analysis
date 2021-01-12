@@ -8,7 +8,9 @@ import akshare as ak
 
 from Kite import config
 from Kite.database import Database
+
 from Leorio.tokenization import Tokenization
+from Leorio.topicmodelling import TopicModelling
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -31,6 +33,8 @@ class GenStockNewsDB(object):
                                               port=config.REDIS_PORT,
                                               db=config.CACHE_NEWS_REDIS_DB_ID)
         self.redis_client.set("today_date", datetime.datetime.now().strftime("%Y-%m-%d"))
+        self.redis_client.delete("stock_news_num_over_{}".format(config.MINIMUM_STOCK_NEWS_NUM_FOR_ML))
+        self._stock_news_nums_stat()
 
     def get_all_news_about_specific_stock(self, database_name, collection_name):
         # 获取collection_name的key值，看是否包含RelatedStockCodes，如果没有说明，没有做将新闻中所涉及的
@@ -87,6 +91,7 @@ class GenStockNewsDB(object):
                     crawled_url_today.update({data["Url"]})
                     if data["RelatedStockCodes"] != "":
                         for stock_code in data["RelatedStockCodes"].split(" "):
+                            # 将新闻分别送进相关股票数据库
                             symbol = "sh{}".format(stock_code) if stock_code[0] == "6" else "sz{}".format(stock_code)
                             _collection = self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, symbol)
                             _tmp_dict = {}
@@ -105,6 +110,25 @@ class GenStockNewsDB(object):
                             logging.info("the real-time fetched news {}, which was saved in [DB:{} - COL:{}] ...".format(data["Title"],
                                                                                                                          config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE,
                                                                                                                          symbol))
+                            #
+                            if symbol.encode() in self.redis_client.lrange("stock_news_num_over_{}".format(config.MINIMUM_STOCK_NEWS_NUM_FOR_ML), 0, -1):
+                                label_name = "3DaysLabel"
+                                # classifier_save_path = "{}_classifier.pkl".format(symbol)
+                                ori_dict_path = "{}_docs_dict.dict".format(symbol)
+                                bowvec_save_path = "{}_bowvec.mm".format(symbol)
+
+                                topicmodelling = TopicModelling()
+                                chn_label = topicmodelling.classify_stock_news(data["Article"],
+                                                                               config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE,
+                                                                               symbol,
+                                                                               label_name=label_name,
+                                                                               topic_model_type="lsi",
+                                                                               classifier_model="rdforest",  # rdforest / svm
+                                                                               ori_dict_path=ori_dict_path,
+                                                                               bowvec_save_path=bowvec_save_path)
+                                logging.info(
+                                    "document '{}...' was classified with label '{}' for symbol {} ... ".format(
+                                        data["Article"][:20], chn_label, symbol))
 
                     self.redis_client.rpop(config.CACHE_NEWS_LIST_NAME)
                     logging.info("now pop {} from redis queue of [DB:{} - KEY:{}] ... ".format(data["Title"],
@@ -182,6 +206,21 @@ class GenStockNewsDB(object):
         else:
             return ""
 
+    def _stock_news_nums_stat(self):
+        import pandas as pd
+        cols_list = self.database.connect_database(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE).list_collection_names(session=None)
+        # stat_nums_list = []
+        # for sym in cols_list:
+        #     stat_nums_list.append(self.database
+        #                           .get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE,
+        #                                           sym)
+        #                           .estimated_document_count())
+        # tmp_pd = pd.DataFrame(list(zip(cols_list, stat_nums_list)), columns=["symbol", "news_num"])
+        # return tmp_pd[tmp_pd.news_num >= config.MINIMUM_STOCK_NEWS_NUM_FOR_ML].reset_index(drop=True)
+        for sym in cols_list:
+            if self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, sym).estimated_document_count() > config.MINIMUM_STOCK_NEWS_NUM_FOR_ML:
+                self.redis_client.lpush("stock_news_num_over_{}".format(config.MINIMUM_STOCK_NEWS_NUM_FOR_ML), sym)
+
 
 if __name__ == "__main__":
     from Kite import config
@@ -190,6 +229,6 @@ if __name__ == "__main__":
     gen_stock_news_db = GenStockNewsDB()
     # gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_CNSTOCK)
     # gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_NBD)
-    gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
+    # gen_stock_news_db.get_all_news_about_specific_stock(config.DATABASE_NAME, config.COLLECTION_NAME_JRJ)
 
     # gen_stock_news_db.listen_redis_queue()
