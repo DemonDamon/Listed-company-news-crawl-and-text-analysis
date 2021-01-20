@@ -47,10 +47,10 @@ class GenStockNewsDB(object):
         stock_symbol_list = self.database.get_data(config.STOCK_DATABASE_NAME,
                                                    config.COLLECTION_NAME_STOCK_BASIC_INFO,
                                                    keys=["symbol"])["symbol"].to_list()
-        # col_names = self.database.connect_database(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE).list_collection_names(session=None)
+        col_names = self.database.connect_database(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE).list_collection_names(session=None)
         for symbol in stock_symbol_list:
-            # if symbol not in col_names:
-            if int(symbol[2:]) > 837:
+            if symbol not in col_names:
+                # if int(symbol[2:]) > 837:
                 _collection = self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, symbol)
                 _tmp_num_stat = 0
                 for row in self.database.get_collection(database_name, collection_name).find():  # 迭代器
@@ -111,24 +111,24 @@ class GenStockNewsDB(object):
                                                                                                                          config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE,
                                                                                                                          symbol))
                             #
-                            if symbol.encode() in self.redis_client.lrange("stock_news_num_over_{}".format(config.MINIMUM_STOCK_NEWS_NUM_FOR_ML), 0, -1):
-                                label_name = "3DaysLabel"
-                                # classifier_save_path = "{}_classifier.pkl".format(symbol)
-                                ori_dict_path = "{}_docs_dict.dict".format(symbol)
-                                bowvec_save_path = "{}_bowvec.mm".format(symbol)
-
-                                topicmodelling = TopicModelling()
-                                chn_label = topicmodelling.classify_stock_news(data["Article"],
-                                                                               config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE,
-                                                                               symbol,
-                                                                               label_name=label_name,
-                                                                               topic_model_type="lsi",
-                                                                               classifier_model="rdforest",  # rdforest / svm
-                                                                               ori_dict_path=ori_dict_path,
-                                                                               bowvec_save_path=bowvec_save_path)
-                                logging.info(
-                                    "document '{}...' was classified with label '{}' for symbol {} ... ".format(
-                                        data["Article"][:20], chn_label, symbol))
+                            # if symbol.encode() in self.redis_client.lrange("stock_news_num_over_{}".format(config.MINIMUM_STOCK_NEWS_NUM_FOR_ML), 0, -1):
+                            #     label_name = "3DaysLabel"
+                            #     # classifier_save_path = "{}_classifier.pkl".format(symbol)
+                            #     ori_dict_path = "{}_docs_dict.dict".format(symbol)
+                            #     bowvec_save_path = "{}_bowvec.mm".format(symbol)
+                            #
+                            #     topicmodelling = TopicModelling()
+                            #     chn_label = topicmodelling.classify_stock_news(data["Article"],
+                            #                                                    config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE,
+                            #                                                    symbol,
+                            #                                                    label_name=label_name,
+                            #                                                    topic_model_type="lsi",
+                            #                                                    classifier_model="rdforest",  # rdforest / svm
+                            #                                                    ori_dict_path=ori_dict_path,
+                            #                                                    bowvec_save_path=bowvec_save_path)
+                            #     logging.info(
+                            #         "document '{}...' was classified with label '{}' for symbol {} ... ".format(
+                            #             data["Article"][:20], chn_label, symbol))
 
                     self.redis_client.rpop(config.CACHE_NEWS_LIST_NAME)
                     logging.info("now pop {} from redis queue of [DB:{} - KEY:{}] ... ".format(data["Title"],
@@ -207,16 +207,7 @@ class GenStockNewsDB(object):
             return ""
 
     def _stock_news_nums_stat(self):
-        import pandas as pd
         cols_list = self.database.connect_database(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE).list_collection_names(session=None)
-        # stat_nums_list = []
-        # for sym in cols_list:
-        #     stat_nums_list.append(self.database
-        #                           .get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE,
-        #                                           sym)
-        #                           .estimated_document_count())
-        # tmp_pd = pd.DataFrame(list(zip(cols_list, stat_nums_list)), columns=["symbol", "news_num"])
-        # return tmp_pd[tmp_pd.news_num >= config.MINIMUM_STOCK_NEWS_NUM_FOR_ML].reset_index(drop=True)
         for sym in cols_list:
             if self.database.get_collection(config.ALL_NEWS_OF_SPECIFIC_STOCK_DATABASE, sym).estimated_document_count() > config.MINIMUM_STOCK_NEWS_NUM_FOR_ML:
                 self.redis_client.lpush("stock_news_num_over_{}".format(config.MINIMUM_STOCK_NEWS_NUM_FOR_ML), sym)
