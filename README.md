@@ -1,6 +1,6 @@
 # 上市公司新闻文本分析与分类预测
 
- ![image](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/assets/images/FINNEWS-HUNTER.jpg)
+ ![image](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/assets/images/FINNEWS-HUNTER.jpg)
 
 [![Star History Chart](https://api.star-history.com/svg?repos=DemonDamon/Listed-company-news-crawl-and-text-analysis&type=Date)]([https://star-history.com/#linhandev/dataset&Date](https://star-history.com/#DemonDamon/Listed-company-news-crawl-and-text-analysis&Date))
 
@@ -31,33 +31,33 @@
  - requests==2.18.4
  - gevent==1.2.1
 
-## 文本处理 -> [text_processing.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Text_Analysis/text_processing.py)
+## 文本处理 -> [text_processing.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Text_Analysis/text_processing.py)
 
  - 文本处理包括去停用词处理、加载新词、中文分词、去掉出现次数少的分词
  - 生成字典和Bow向量，并基于Gensim转化模型（LSI、LDA、TF-IDF）转化Bow向量
  - 计算文本相似度
  - 打印词云
 
-## 文本挖掘 -> [text_mining.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Text_Analysis/text_mining.py)
+## 文本挖掘 -> [text_mining.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Text_Analysis/text_mining.py)
 
  - 从新闻文本中抽取特定信息，并贴上新的文本标签方便往后训练模型
  - 从数据库中抽取与某支股票相关的所有新闻文本
  - 将贴好标签的历史新闻进行分类训练，利用训练好的模型对实时抓取的新闻文本进行分类预测
 
-## 新闻爬取 -> [crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_cnstock.py), [crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_jrj.py), [crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_nbd.py), [crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_sina.py), [crawler_stcn.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_stcn.py)
+## 新闻爬取 -> [crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_cnstock.py), [crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_jrj.py), [crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_nbd.py), [crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_sina.py), [crawler_stcn.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_stcn.py)
 
  - 分析网站结构，多线程（或协程）爬取上市公司历史新闻数据
 
-## Tushare数据提取 -> [crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)
+## Tushare数据提取 -> [crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/run_crawler_tushare.py)
 
  - 获取沪深所有股票的基本信息，包括股票代码、股票名称、所属行业、所属地区等
 
 ## 用法
 
  - 配好运行环境以及安装MongoDB，最好再安装一个MongoDB的可视化管理工具Studio 3T
- - 先运行[crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_cnstock.py), [crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_jrj.py), [crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_nbd.py), [crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_sina.py), [crawler_stcn.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_stcn.py)这5个py文件，而且可能因为对方服务器没有响应而重复多次运行这几个文件才能抓取大量的历史数据
- - 接着运行[crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_crawler_tushare.py)从Tushare获取基本信息和股票价格
- - 最后运行[run_main.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/run_main.py)文件，其中有4个步骤，除了第1步初始化外，其他几步最好单独运行
+ - 先运行[crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_cnstock.py), [crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_jrj.py), [crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_nbd.py), [crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_sina.py), [crawler_stcn.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_stcn.py)这5个py文件，而且可能因为对方服务器没有响应而重复多次运行这几个文件才能抓取大量的历史数据
+ - 接着运行[crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/run_crawler_tushare.py)从Tushare获取基本信息和股票价格
+ - 最后运行[run_main.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/run_main.py)文件，其中有4个步骤，除了第1步初始化外，其他几步最好单独运行
  - 注意：所有程序都必须在文件所在目录下运行
 
 ## 更新目标
@@ -65,23 +65,23 @@
  由于之前的项目代码是在初学Python的时候写的，很多写法都是入门级别，因此为了提高整体项目的质量，除了优化代码细节和已有的功能模块之外，还加入了多个功能模块，来支撑未来更加智能化和个性化的金融分析与交易。
  - 完成初步构想，重构该项目，将项目分成8大模块，分别是`数据获取模块`，`数据清洗与预处理模块`，`大数据可视化模块`，`基于机器学习的文本挖掘模块`，`金融知识图谱构建模块`，`任务导向多轮对话模块`，`金融交易模块`，`通用服务模块`
  (备注：项目在完善之后会重新更名为`Finnews Hunter`，命名的来源是出于对`《全职猎人》`的喜爱，与项目本质的结合，其中`Finnews`是`Financial News`的简写。上面提到的8个模块，分别由`《全职猎人》`中的本人最喜爱的8位角色命名，分别是
- - `数据获取模块`               -> [Gon](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Gon) -> `网页爬虫、各种数据源API调用等`
- - `数据清洗与预处理模块`       -> [Killua](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Killua) -> `数据清洗、数据转换(数据采样、类型转换、归一化等)、数据描述(数据可视化)、特征选择与组合(熵增益和分支定界等)、特征抽取(主成分分析、线性判别分析等)`
- - `大数据可视化模块`           -> [Kurapika](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Kurapika) -> `基于多个可视化模块进行封装，包括提供Web可视化界面`
- - `自然语言处理模块`           -> [Leorio](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Leorio) -> `中文分词、词性标注、实体识别`
- - `基于机器学习的文本挖掘模块` -> [Hisoka](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Hisoka)  -> ``
- - `金融知识图谱构建模块`       -> [Chrollo](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Chrollo) -> ``
- - `任务导向多轮对话模块`       -> [Illumi](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Illumi) -> ``
- - `金融交易模块`               -> [Feitan](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Feitan) -> ``
- - `基础与Web服务模块`          -> [Kite](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src/Kite) -> `基础服务集，包括基本参数配置文件(.py)、数据库的构建与连接、日志打印与收集、多线程服务、Web服务框架搭建以及其他函数`)
+ - `数据获取模块`               -> [Gon](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Gon) -> `网页爬虫、各种数据源API调用等`
+ - `数据清洗与预处理模块`       -> [Killua](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Killua) -> `数据清洗、数据转换(数据采样、类型转换、归一化等)、数据描述(数据可视化)、特征选择与组合(熵增益和分支定界等)、特征抽取(主成分分析、线性判别分析等)`
+ - `大数据可视化模块`           -> [Kurapika](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Kurapika) -> `基于多个可视化模块进行封装，包括提供Web可视化界面`
+ - `自然语言处理模块`           -> [Leorio](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Leorio) -> `中文分词、词性标注、实体识别`
+ - `基于机器学习的文本挖掘模块` -> [Hisoka](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Hisoka)  -> ``
+ - `金融知识图谱构建模块`       -> [Chrollo](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Chrollo) -> ``
+ - `任务导向多轮对话模块`       -> [Illumi](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Illumi) -> ``
+ - `金融交易模块`               -> [Feitan](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Feitan) -> ``
+ - `基础与Web服务模块`          -> [Kite](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src/Kite) -> `基础服务集，包括基本参数配置文件(.py)、数据库的构建与连接、日志打印与收集、多线程服务、Web服务框架搭建以及其他函数`)
  
  ## 更新日志
  - 注意：  
-   - 以下例子均需在代码根目录[src](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/master/src)下执行  
+   - 以下例子均需在代码根目录[src](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/tree/main/src)下执行  
    - 先安装好MongoDB用作存储数据库，以及Redis用做简单的消息队列
-   - 运行下面demo时，先要设置[config.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Kite/config.py)里面的参数
+   - 运行下面demo时，先要设置[config.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Kite/config.py)里面的参数
    
- - 更新[crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_tushare.py)代码为[stockinfospyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
+ - 更新[crawler_tushare.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_tushare.py)代码为[stockinfospyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/stockinfospyder.py)，直接运行即可获取股票历史价格数据，并在每天15:30分后更新数据(目前只采集天数据)
     - example-1 调用[AkShare](https://www.akshare.xyz/zh_CN/latest/)接口获取股票历史价格数据，并开启实时更新
     ```
     from Kite import config
@@ -101,7 +101,7 @@
     stock_info_spyder = StockInfoSpyder(config.STOCK_DATABASE_NAME, config.COLLECTION_NAME_STOCK_BASIC_INFO)
     stock_info_spyder.get_realtime_news()
     ```
- - 更新[crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_cnstock.py)代码为[cnstockspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/cnstockspyder.py)，直接运行即可获取中国证券网历史新闻数据，并可以实时更新采集
+ - 更新[crawler_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_cnstock.py)代码为[cnstockspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/cnstockspyder.py)，直接运行即可获取中国证券网历史新闻数据，并可以实时更新采集
     - example-1 爬取历史新闻数据，然后去重以及去NULL
     ```
     import time
@@ -154,7 +154,7 @@
     for thread in thread_list:
         thread.join()
     ```
- - 更新[crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_jrj.py)代码为[jrjspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/jrjspyder.py)，直接运行即可获取金融界历史新闻数据，并可以实时更新采集
+ - 更新[crawler_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_jrj.py)代码为[jrjspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/jrjspyder.py)，直接运行即可获取金融界历史新闻数据，并可以实时更新采集
     - example-1 爬取历史新闻数据，然后去重以及去NULL
     ```
     from Kite import config
@@ -177,7 +177,7 @@
     jrj_spyder.get_historical_news(config.WEBSITES_LIST_TO_BE_CRAWLED_JRJ)  # 补充爬虫数据到最新日期
     jrj_spyder.get_realtime_news()
     ```
- - 更新[crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_nbd.py)代码为[nbdspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/nbdspyder.py)，直接运行即可获取每经网历史新闻数据，并可以实时更新采集
+ - 更新[crawler_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_nbd.py)代码为[nbdspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/nbdspyder.py)，直接运行即可获取每经网历史新闻数据，并可以实时更新采集
     - example-1 爬取历史新闻数据，然后去重以及去NULL
     ```
     from Kite import config
@@ -208,9 +208,9 @@
 
     nbd_spyder.get_realtime_news()
     ```
- - 更新[crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/Crawler/crawler_sina.py)代码为[sinaspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/sinaspyder.py)，直接运行即可获取新浪财经历史新闻数据(未更新)
+ - 更新[crawler_sina.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/Crawler/crawler_sina.py)代码为[sinaspyder.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/sinaspyder.py)，直接运行即可获取新浪财经历史新闻数据(未更新)
  - 停止`证券时报网`爬虫代码的更新(旧代码已不可用)，新增`网易财经`和`凤凰财经`的爬虫代码(未更新)
- - 新增[buildstocknewsdb.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Killua/buildstocknewsdb.py)如果已经在每经网、中国证券网和金融界爬取了一定量新闻文本，接下来就是针对每支股票构建对应的新闻数据库，并根据股价贴上3/5/10/15/30/60天标签，具体判断条件查看[buildstocknewsdb.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Killua/buildstocknewsdb.py)第111-116行注释
+ - 新增[buildstocknewsdb.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Killua/buildstocknewsdb.py)如果已经在每经网、中国证券网和金融界爬取了一定量新闻文本，接下来就是针对每支股票构建对应的新闻数据库，并根据股价贴上3/5/10/15/30/60天标签，具体判断条件查看[buildstocknewsdb.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Killua/buildstocknewsdb.py)第111-116行注释
     - example-1 从历史新闻数据库中抽取、构建每支股票的新闻数据库，并贴上标签
     ```
     from Kite import config
@@ -229,9 +229,9 @@
     gen_stock_news_db = GenStockNewsDB()
     gen_stock_news_db.listen_redis_queue()
     ```
- - 新增[realtime_spyder_startup.bat](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_spyder_startup.bat)同时以下程序
-    - 开启多个爬虫实例，包括[realtime_starter_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/realtime_starter_cnstock.py)、[realtime_starter_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/realtime_starter_jrj.py)、[realtime_starter_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/realtime_starter_nbd.py)等
-    - 全股票数据更新代码[realtime_starter_stock_price.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/realtime_starter_stock_price.py)
-    - 监听redis消息队列[realtime_starter_redis_queue.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/Gon/realtime_starter_redis_queue.py)
-  - 新增[realtime_spyder_stopall.bat](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/master/src/realtime_spyder_stopall.bat)批量终止爬虫程序
+ - 新增[realtime_spyder_startup.bat](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/realtime_spyder_startup.bat)同时以下程序
+    - 开启多个爬虫实例，包括[realtime_starter_cnstock.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/realtime_starter_cnstock.py)、[realtime_starter_jrj.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/realtime_starter_jrj.py)、[realtime_starter_nbd.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/realtime_starter_nbd.py)等
+    - 全股票数据更新代码[realtime_starter_stock_price.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/realtime_starter_stock_price.py)
+    - 监听redis消息队列[realtime_starter_redis_queue.py](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/Gon/realtime_starter_redis_queue.py)
+  - 新增[realtime_spyder_stopall.bat](https://github.com/DemonDamon/Listed-company-news-crawl-and-text-analysis/blob/main/src/realtime_spyder_stopall.bat)批量终止爬虫程序
  - 更新前使用jieba分词系统，在实体识别上需要不断维护新词表来提高识别精度；更新后，使用基于BERT预训练的FinBERT对金融领域实体进行识别
