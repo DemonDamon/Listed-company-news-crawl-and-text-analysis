@@ -21,7 +21,7 @@ def validate_directory(directory):
 
 def dfs_showdir(directory, level):
     """
-    递归显示目录结构。
+    递归显示目录结构。 
     """
     try:
         items = os.listdir(directory)
