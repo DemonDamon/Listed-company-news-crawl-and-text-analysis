@@ -8,6 +8,5 @@ def add_path(path):
 
 
 # add `./src` dir to system path
-src_dir = os.path.abspath(os.path.join(os.getcwd(), "../"))
-
+src_dir = os.path.abspath(os.path.join(os.getcwd(), "../../src/"))
 add_path(src_dir)
