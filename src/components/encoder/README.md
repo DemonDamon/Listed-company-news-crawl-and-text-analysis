@@ -19,15 +19,15 @@ huggingface-cli download --resume-download nomic-ai/nomic-embed-text-v1 --repo-t
 cd src/components/text_embedder
 
 # 效果最差但是
-python app.py --model_name sentence-transformers/all-MiniLM-L6-v2 --local_dir weights/all-MiniLM-L6-v2 --device cpu
+python api_server.py --model_name sentence-transformers/all-MiniLM-L6-v2 --local_dir weights/all-MiniLM-L6-v2 --device cpu
 
-python app.py --model_name jinaai/jina-embeddings-v2-base-zh --local_dir weights/jina-embeddings-v2-base-zh --device cpu
+python api_server.py --model_name jinaai/jina-embeddings-v2-base-zh --local_dir weights/jina-embeddings-v2-base-zh --device cpu
 
-python app.py --model_name BAAI/bge-m3 --local_dir weights/bge-m3 --device cpu
+python api_server.py --model_name BAAI/bge-m3 --local_dir weights/bge-m3 --device cpu
 
-python app.py --model_name maidalun1020/bce-embedding-base_v1 --local_dir weights/bce-embedding-base_v1 --device cpu
+python api_server.py --model_name maidalun1020/bce-embedding-base_v1 --local_dir weights/bce-embedding-base_v1 --device cpu
 
-python app.py --model_name nomic-ai/nomic-embed-text-v1 --local_dir weights/nomic-embed-text-v1 --device cpu
+python api_server.py --model_name nomic-ai/nomic-embed-text-v1 --local_dir weights/nomic-embed-text-v1 --device cpu
 ```
 
 # 测试脚本
